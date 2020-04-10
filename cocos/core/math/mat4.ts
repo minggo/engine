@@ -1013,11 +1013,11 @@ export class Mat4 extends ValueType {
         out.m07 = 0;
         out.m08 = 0;
         out.m09 = 0;
-        out.m10 = (far + near) * nf;
+        out.m10 = (far) * nf;
         out.m11 = -1;
         out.m12 = 0;
         out.m13 = 0;
-        out.m14 = (2 * far * near) * nf;
+        out.m14 = (far * near) * nf;
         out.m15 = 0;
         return out;
     }
@@ -1040,16 +1040,16 @@ export class Mat4 extends ValueType {
         out.m02 = 0;
         out.m03 = 0;
         out.m04 = 0;
-        out.m05 = -2 * bt;
+        out.m05 = -bt;
         out.m06 = 0;
         out.m07 = 0;
         out.m08 = 0;
         out.m09 = 0;
-        out.m10 = 2 * nf;
+        out.m10 = nf;
         out.m11 = 0;
         out.m12 = (left + right) * lr;
         out.m13 = (top + bottom) * bt;
-        out.m14 = (far + near) * nf;
+        out.m14 = (near) * nf;
         out.m15 = 1;
         return out;
     }
