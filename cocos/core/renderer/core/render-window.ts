@@ -23,7 +23,6 @@
  THE SOFTWARE.
  */
 import { JSB } from 'internal:constants';
-import { notStrictEqual } from 'assert';
 import {
     TextureType, TextureUsageBit, Format, RenderPass, Texture, Framebuffer,
     RenderPassInfo, Device, TextureInfo, FramebufferInfo } from '../../gfx';
