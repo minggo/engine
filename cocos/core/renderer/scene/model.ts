@@ -537,13 +537,6 @@ export class Model {
         }
     }
 
-    // TODO
-    // private _updateNativeInstanceAttribute (size: number, ele: any) {
-    //     if (JSB) {
-    //         this.native.getInstancedAttributeBlock().resize
-    //     }
-    // }
-
     // sub-classes can override the following functions if needed
 
     // for now no submodel level instancing attributes
