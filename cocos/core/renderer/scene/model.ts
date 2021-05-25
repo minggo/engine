@@ -588,6 +588,10 @@ export class Model {
         if (pass.batchingScheme === BatchingSchemes.INSTANCING) { InstancedBuffer.get(pass).destroy(); } // instancing IA changed
         this._setInstMatWorldIdx(this._getInstancedAttributeIndex(INST_MAT_WORLD));
         this._transformUpdated = true;
+
+        if (JSB) {
+            this._nativeObj.setInstanceAttributes(attrs.attributes);
+        }
     }
 
     protected _initLocalDescriptors (subModelIndex: number) {
