@@ -560,6 +560,9 @@ export class Model {
 
         const attrs = this.instancedAttributes;
         attrs.buffer = new Uint8Array(buffer);
+        if (JSB) {
+            this._nativeObj.setInstancedBuffer(buffer);
+        }
         attrs.views.length = attrs.attributes.length = 0;
         let offset = 0;
         for (let j = 0; j < attributes.length; j++) {
