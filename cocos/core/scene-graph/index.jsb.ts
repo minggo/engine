@@ -40,6 +40,7 @@ export { find } from './find';
 export * from './deprecated';
 export { default as NodeActivator } from './node-activator';
 
-export declare class NativeNode {
-    public initWithData (data: TypedArray);
-}
+// scene
+declare const ns: any;
+
+export const NativeNode = ns.Node;
