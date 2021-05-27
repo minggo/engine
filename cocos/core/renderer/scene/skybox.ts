@@ -120,8 +120,8 @@ export class Skybox {
     protected _isRGBE = false;
     protected declare _nativeObj: NaitveSkybox | null;
 
-    get native () {
-        return this._nativeObj;
+    get native (): NaitveSkybox {
+        return this._nativeObj!;
     }
 
     get handle () : SkyboxHandle {
