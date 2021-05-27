@@ -39,7 +39,3 @@ export { Layers } from './layers';
 export { find } from './find';
 export * from './deprecated';
 export { default as NodeActivator } from './node-activator';
-
-export declare class NativeNode {
-    public initWithData (data: TypedArray);
-}
