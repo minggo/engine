@@ -185,8 +185,8 @@ export class Light {
         return this._handle;
     }
 
-    get native () {
-        return this._nativeObj;
+    get native (): NativeLight {
+        return this._nativeObj!;
     }
 
     protected _baked = false;

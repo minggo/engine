@@ -235,7 +235,6 @@ export class Model {
     protected declare _nativeObj: NativeModel | null;
 
     get native (): NativeModel {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this._nativeObj!;
     }
 

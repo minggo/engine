@@ -84,8 +84,8 @@ export class RenderScene {
         return this._scenePoolHandle;
     }
 
-    get native () {
-        return this._nativeObj;
+    get native (): NativeRenderScene {
+        return this._nativeObj!;
     }
 
     get batches () {

@@ -237,8 +237,8 @@ export class Fog {
     protected _fogRange = 1.2;
     protected declare _nativeObj: NativeFog | null;
 
-    get native () {
-        return this._nativeObj;
+    get native (): NativeFog {
+        return this._nativeObj!;
     }
 
     get handle () : FogHandle {
