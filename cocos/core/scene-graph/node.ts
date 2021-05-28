@@ -169,6 +169,7 @@ export class Node extends BaseNode {
             this._poolHandle = NodePool.alloc();
             NodePool.set(this._poolHandle, NodeView.LAYER, this._layer);
             NodePool.setVec3(this._poolHandle, NodeView.WORLD_SCALE, this._scale);
+            NodePool.setMat4(this._poolHandle, NodeView.WORLD_MATRIX, this._mat);
         } else {
             this._pos = new Vec3();
             this._rot = new Quat();
@@ -677,7 +678,7 @@ export class Node extends BaseNode {
                 }
             }
 
-            if (dirtyBits !== TransformBit.NONE && JSB) {
+            if (JSB) {
                 NodePool.setMat4(child._poolHandle, NodeView.WORLD_MATRIX, child._mat);
             }
 
