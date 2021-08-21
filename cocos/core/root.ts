@@ -32,7 +32,7 @@ import { JSB } from 'internal:constants';
 import { builtinResMgr } from './builtin';
 import { Pool } from './memop';
 import { RenderPipeline, createDefaultPipeline, DeferredPipeline } from './pipeline';
-import { Camera, Light, Model, NativeRoot } from './renderer/scene';
+import { Camera, Light, Model } from './renderer/scene';
 import { DataPoolManager } from '../3d/skeletal-animation/data-pool-manager';
 import { LightType } from './renderer/scene/light';
 import { IRenderSceneInfo, RenderScene } from './renderer/scene/render-scene';
@@ -65,32 +65,6 @@ export interface ISceneInfo {
  * Root类
  */
 export class Root {
-    private _init (): void {
-        if (JSB) {
-            this._naitveObj = new NativeRoot();
-        }
-    }
-
-    private _destroy (): void {
-        if (JSB) {
-            this._naitveObj = null;
-        }
-    }
-
-    private _setCumulativeTime (deltaTime: number): void {
-        this._cumulativeTime += deltaTime;
-        if (JSB) {
-            this._naitveObj.cumulativeTime = this._cumulativeTime;
-        }
-    }
-
-    private _setFrameTime (deltaTime: number): void {
-        this._frameTime = deltaTime;
-        if (JSB) {
-            this._naitveObj.frameTime = deltaTime;
-        }
-    }
-
     /**
      * @zh
      * GFX 设备
@@ -244,7 +218,6 @@ export class Root {
     private _fixedFPSFrameTime = 0;
     private _cumulativeTime = 0;
     private _frameTime = 0;
-    private declare _naitveObj: any;
 
     /**
      * 构造函数
@@ -266,8 +239,6 @@ export class Root {
      * @param info Root描述信息
      */
     public initialize (info: IRootInfo): Promise<void> {
-        this._init();
-
         const colorAttachment = new ColorAttachment();
         const depthStencilAttachment = new DepthStencilAttachment();
         depthStencilAttachment.depthStoreOp = StoreOp.DISCARD;
@@ -307,8 +278,6 @@ export class Root {
         this._curWindow = null;
         this._mainWindow = null;
         this.dataPoolManager.clear();
-
-        this._destroy();
     }
 
     /**
@@ -389,7 +358,7 @@ export class Root {
      * 重置累计时间
      */
     public resetCumulativeTime () {
-        this._setCumulativeTime(0);
+        this._cumulativeTime = 0;
     }
 
     /**
@@ -398,7 +367,7 @@ export class Root {
      * @param deltaTime 间隔时间
      */
     public frameMove (deltaTime: number) {
-        this._setFrameTime(deltaTime);
+        this._frameTime = deltaTime;
 
         /*
         if (this._fixedFPSFrameTime > 0) {
@@ -412,7 +381,7 @@ export class Root {
         */
 
         ++this._frameCount;
-        this._setCumulativeTime(deltaTime);
+        this._cumulativeTime += deltaTime;
         this._fpsTime += deltaTime;
         if (this._fpsTime > 1.0) {
             this._fps = this._frameCount;
