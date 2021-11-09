@@ -33,6 +33,48 @@ import { Filter, PixelFormat, WrapMode } from './asset-enum';
 
 const textureBaseProto: any = jsb.TextureBase.prototype;
 
+textureBaseProto._deserialize = function (serializedData: any, handle: any) {
+    const data = serializedData as string;
+    const fields = data.split(',');
+    fields.unshift('');
+    if (fields.length >= 5) {
+        // decode filters
+        this.setFilters(parseInt(fields[1]), parseInt(fields[2]));
+        // decode wraps
+        this.setWrapMode(parseInt(fields[3]), parseInt(fields[4]));
+    }
+    if (fields.length >= 7) {
+        this.setMipFilter(parseInt(fields[5]));
+        this.setAnisotropy(parseInt(fields[6]));
+    }
+};
+
+textureBaseProto._getGFXDevice = function () {
+    if (legacyCC.director.root) {
+        return legacyCC.director.root.device;
+    }
+    return null;
+};
+
+textureBaseProto._getGFXFormat = function () {
+    return this._getGFXPixelFormat(this.format);
+};
+
+textureBaseProto._setGFXFormat = function (format?: PixelFormat) {
+    this.format = format === undefined ? PixelFormat.RGBA8888 : format;
+};
+
+textureBaseProto._getGFXPixelFormat = function (format) {
+    if (format === PixelFormat.RGBA_ETC1) {
+        format = PixelFormat.RGB_ETC1;
+    } else if (format === PixelFormat.RGB_A_PVRTC_4BPPV1) {
+        format = PixelFormat.RGB_PVRTC_4BPPV1;
+    } else if (format === PixelFormat.RGB_A_PVRTC_2BPPV1) {
+        format = PixelFormat.RGB_PVRTC_2BPPV1;
+    }
+    return format;
+};
+
 textureBaseProto.createNode = null!;
 
 export type TextureBase = jsb.TextureBase;
