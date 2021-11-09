@@ -24,7 +24,7 @@
 */
 import { ccclass, override } from 'cc.decorator';
 import { ALIPAY, XIAOMI, JSB, TEST, BAIDU } from 'internal:constants';
-import { Asset, warnID } from '..';
+
 import {
     _applyDecoratedDescriptor,
     _assertThisInitialized,
@@ -33,6 +33,7 @@ import {
 import { Feature } from '../gfx';
 import { legacyCC } from '../global-exports';
 import { PixelFormat } from './asset-enum';
+import { warnID } from '../platform';
 
 export type ImageAsset = jsb.ImageAsset;
 export const ImageAsset = jsb.ImageAsset;

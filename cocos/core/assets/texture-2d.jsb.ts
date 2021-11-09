@@ -83,8 +83,12 @@ texture2DProto._deserialize = function (serializedData: any, handle: any) {
         const mipmapUUID = data.mipmaps[i];
         handle.result.push(this._mipmaps, `${i}`, mipmapUUID, js._getClassId(ImageAsset));
     }
+};
 
+const oldOnLoaded = texture2DProto.onLoaded;
+texture2DProto.onLoaded = function () {
     this.setMipmaps(this._mipmaps);
+    oldOnLoaded.call(this);
 };
 
 legacyCC.Texture2D = jsb.Texture2D;
