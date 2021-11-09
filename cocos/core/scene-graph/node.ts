@@ -31,18 +31,19 @@
 import {
     ccclass, editable, serializable, type,
 } from 'cc.decorator';
-import { EDITOR } from 'internal:constants';
+import { EDITOR, JSB } from 'internal:constants';
 import { Layers } from './layers';
 import { NodeUIProperties } from './node-ui-properties';
 import { eventManager } from '../platform/event-manager/event-manager';
 import { legacyCC } from '../global-exports';
 import { BaseNode, TRANSFORM_ON } from './base-node';
 import { Mat3, Mat4, Quat, Vec3 } from '../math';
-import { NULL_HANDLE, NodePool, NodeView, NodeHandle  } from '../renderer/core/memory-pools';
 import { NodeSpace, TransformBit } from './node-enum';
 import { applyMountedChildren, applyMountedComponents, applyRemovedComponents,
     applyPropertyOverrides, applyTargetOverrides, createNodeWithPrefab, generateTargetMap } from '../utils/prefab/utils';
 import { Component } from '../components';
+import { NativeNode } from '../renderer/scene/native-scene';
+import { FloatArray } from '../math/type-define';
 import { NodeEventType } from './node-event';
 import { CustomSerializable, deserializeTag, editorExtrasTag, SerializationContext, SerializationInput, SerializationOutput, serializeTag } from '../data';
 
@@ -55,6 +56,7 @@ const m3_scaling = new Mat3();
 const m4_1 = new Mat4();
 const dirtyNodes: any[] = [];
 const nativeDirtyNodes: any[] = [];
+const view_tmp:[Uint32Array, number] = [] as any;
 class BookOfChange {
     private _chunks: Uint32Array[] = [];
     private _freelists: number[][] = [];
@@ -95,14 +97,14 @@ class BookOfChange {
     private _createChunk () {
         this._chunks.push(new Uint32Array(BookOfChange.CAPACITY_PER_CHUNK));
         const freelist: number[] = [];
-        for (let i = 0; i < BookOfChange.CAPACITY_PER_CHUNK; ++i) freelist.push(i);
+        for (let i = BookOfChange.CAPACITY_PER_CHUNK - 1; i >= 0; i--) freelist.push(i);
         this._freelists.push(freelist);
     }
 
     private _createView (chunkIdx: number): [Uint32Array, number] {
-        const chunk = this._chunks[chunkIdx];
-        const offset = this._freelists[chunkIdx].pop()!;
-        return [chunk, offset];
+        view_tmp[0] = this._chunks[chunkIdx];
+        view_tmp[1] = this._freelists[chunkIdx].pop()!;
+        return view_tmp;
     }
 }
 
@@ -165,6 +167,9 @@ export class Node extends BaseNode implements CustomSerializable {
     public static reserveContentsForAllSyncablePrefabTag = reserveContentsForAllSyncablePrefabTag;
 
     // UI 部分的脏数据
+    /**
+     * @private
+     */
     public _uiProps = new NodeUIProperties(this);
 
     /**
@@ -202,26 +207,39 @@ export class Node extends BaseNode implements CustomSerializable {
     @serializable
     protected _euler = new Vec3();
 
-    private _dirtyFlags = TransformBit.NONE; // does the world transform need to update?
+    private _dirtyFlagsPri = TransformBit.NONE; // does the world transform need to update?
+
+    protected get _dirtyFlags () {
+        return this._dirtyFlagsPri;
+    }
+
+    protected set _dirtyFlags (flags) {
+        this._dirtyFlagsPri = flags;
+    }
 
     protected _eulerDirty = false;
-    protected _nodeHandle: NodeHandle = NULL_HANDLE;
     protected declare _hasChangedFlagsChunk: Uint32Array; // has the transform been updated in this frame?
     protected declare _hasChangedFlagsOffset: number;
+    protected declare _hasChangedFlags: Uint32Array;
+    protected declare _nativeObj: NativeNode | null;
     protected declare _nativeLayer: Uint32Array;
     protected declare _nativeDirtyFlag: Uint32Array;
 
-    constructor (name?: string) {
-        super(name);
-
+    protected _init () {
         const [chunk, offset] = bookOfChange.alloc();
         this._hasChangedFlagsChunk = chunk;
         this._hasChangedFlagsOffset = offset;
-
+        const flagBuffer = new Uint32Array(chunk.buffer, chunk.byteOffset + offset * 4, 1);
+        this._hasChangedFlags = flagBuffer;
         this._pos = new Vec3();
         this._rot = new Quat();
         this._scale = new Vec3(1, 1, 1);
         this._mat = new Mat4();
+    }
+
+    constructor (name?: string) {
+        super(name);
+        this._init();
     }
 
     /**
@@ -236,6 +254,10 @@ export class Node extends BaseNode implements CustomSerializable {
         const result = this._onPreDestroyBase();
         bookOfChange.free(this._hasChangedFlagsChunk, this._hasChangedFlagsOffset);
         return result;
+    }
+
+    get native (): any {
+        return this._nativeObj;
     }
 
     /**
@@ -646,19 +668,51 @@ export class Node extends BaseNode implements CustomSerializable {
      * @param dirtyBit The dirty bits to setup to children, can be composed with multiple dirty bits
      */
     public invalidateChildren (dirtyBit: TransformBit) {
-        const childDirtyBit = dirtyBit | TransformBit.POSITION;
-        this._setDirtyNode(0, this);
         let i = 0;
+        let j = 0;
+        let l = 0;
+        let cur: this;
+        let c : this;
+        let flag = 0;
+        let children:this[];
+        let hasChangedFlags = 0;
+        const childDirtyBit = dirtyBit | TransformBit.POSITION;
+
+        // NOTE: inflate function
+        // ```
+        // this._setDirtyNode(0, this);
+        // ```
+        dirtyNodes[0] = this;
+
         while (i >= 0) {
-            const cur: this = dirtyNodes[i--];
-            const hasChangedFlags = cur.hasChangedFlags;
-            if (cur.isValid && (cur._dirtyFlags & hasChangedFlags & dirtyBit) !== dirtyBit) {
-                cur._dirtyFlags |= dirtyBit;
+            cur = dirtyNodes[i--];
+            hasChangedFlags = cur._hasChangedFlags[0];
+            flag =  cur._dirtyFlagsPri;
+            if (cur.isValid && (flag & hasChangedFlags & dirtyBit) !== dirtyBit) {
+                // NOTE: inflate procedure
+                // ```
+                // cur._dirtyFlags |= dirtyBit;
+                // ```
+                flag |= dirtyBit;
+                cur._dirtyFlagsPri = flag;
+
                 cur._uiProps.uiTransformDirty = true; // UIOnly TRS dirty
-                cur.hasChangedFlags = hasChangedFlags | dirtyBit;
-                const children = cur._children;
-                const len = children.length;
-                for (let j = 0; j < len; ++j) this._setDirtyNode(++i, children[j]);
+                // NOTE: inflate attribute accessor
+                // ```
+                // cur.hasChangedFlags = hasChangedFlags | dirtyBit;
+                // ```
+                cur._hasChangedFlags[0] = hasChangedFlags | dirtyBit;
+
+                children = cur._children;
+                l = children.length;
+                for (j = 0; j < l; j++) {
+                    c = children[j];
+                    // NOTE: inflate function
+                    // ```
+                    // this._setDirtyNode(0, c);
+                    // ```
+                    dirtyNodes[++i] = c;
+                }
             }
             dirtyBit = childDirtyBit;
         }

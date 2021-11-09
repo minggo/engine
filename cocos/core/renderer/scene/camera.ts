@@ -23,7 +23,7 @@
  THE SOFTWARE.
  */
 
-import { Frustum, Ray } from '../../geometry';
+import { enums, Frustum, Ray } from '../../geometry';
 import { SurfaceTransform, ClearFlagBit, Device, Color, ClearFlags } from '../../gfx';
 import {
     lerp, Mat4, Rect, toRadian, Vec3, IVec4Like,
@@ -169,6 +169,7 @@ export class Camera {
         this._isoValue = ISOS[this._iso];
 
         this._aspect = this.screenScale = 1;
+        this._frustum.accurate = true;
 
         if (!correctionMatrices.length) {
             const ySign = device.capabilities.clipSpaceSignY;
@@ -219,6 +220,10 @@ export class Camera {
         this._width = width;
         this._height = height;
         this._aspect = (width * this._viewport.width) / (height * this._viewport.height);
+        // TODO: minggo
+        // if (JSB) {
+        //     this._nativeObj!.aspect = this._aspect;
+        // }
         this._isProjDirty = true;
     }
 
@@ -226,6 +231,10 @@ export class Camera {
         this._width = width;
         this._height = height;
         this._aspect = (width * this._viewport.width) / (height * this._viewport.height);
+        // TODO: minggo
+        // if (JSB) {
+        //     this._nativeObj!.aspect = this._aspect;
+        // }
         this.isWindowSize = false;
     }
 
@@ -261,6 +270,10 @@ export class Camera {
                 Mat4.ortho(this._matProj, -x, x, -y, y, this._nearClip, this._farClip,
                     this._device.capabilities.clipSpaceMinZ, projectionSignY, orientation);
             }
+            // TODO: minggo
+            // if (JSB) {
+            //     this._nativeObj!.aspect = this._aspect;
+            // }
             Mat4.invert(this._matProjInv, this._matProj);
             viewProjDirty = true;
             this._isProjDirty = false;
@@ -319,6 +332,10 @@ export class Camera {
 
     set fov (fov) {
         this._fov = fov;
+        // TODO: minggo
+        // if (JSB) {
+        //     this._nativeObj!.fov = fov;
+        // }
         this._isProjDirty = true;
     }
 
@@ -361,7 +378,7 @@ export class Camera {
 
     set viewport (val) {
         const { x, width, height } = val;
-        const y = this._device.capabilities.clipSpaceSignY < 0 ? 1 - val.y - height : val.y;
+        const y = this._device.capabilities.screenSpaceSignY < 0 ? 1 - val.y - height : val.y;
 
         switch (this._device.surfaceTransform) {
         case SurfaceTransform.ROTATE_90:

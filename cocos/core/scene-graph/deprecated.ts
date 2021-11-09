@@ -161,6 +161,9 @@ removeProperty(SceneGlobals.prototype, 'SceneGlobals.prototype', [
     {
         name: 'packing',
     },
+    {
+        name: 'autoAdapt',
+    },
 ]);
 
 removeProperty(Node.prototype, 'Node.prototype', [
