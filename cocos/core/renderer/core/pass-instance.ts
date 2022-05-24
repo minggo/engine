@@ -23,19 +23,14 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module material
- */
-
 import { EffectAsset } from '../../assets/effect-asset';
 import { MaterialInstance } from './material-instance';
 import { BatchingSchemes, Pass, PassOverrides } from './pass';
 import { overrideMacros, MacroRecord } from './pass-utils';
 
 /**
- * @en A pass instance defines an variant version of the [[Pass]]
- * @zh 表示 [[Pass]] 的一种特殊实例
+ * @en A pass instance defines an variant version of the [[renderer.Pass]]
+ * @zh 表示 [[renderer.Pass]] 的一种特殊实例
  */
 export class PassInstance extends Pass {
     /**
@@ -61,7 +56,7 @@ export class PassInstance extends Pass {
             const parentBlock = this._parent.blocks[u.binding];
             block.set(parentBlock);
         }
-        this._setRootBufferDirty(true);
+        this._rootBufferDirty = true;
         const paren = this._parent as PassInstance;
         for (let i = 0; i < this._shaderInfo.samplerTextures.length; i++) {
             const u = this._shaderInfo.samplerTextures[i];
@@ -121,11 +116,11 @@ export class PassInstance extends Pass {
 
     protected _syncBatchingScheme () {
         this._defines.USE_BATCHING = this._defines.USE_INSTANCING = false;
-        this._setBatchingScheme(BatchingSchemes.NONE);
+        this._batchingScheme = BatchingSchemes.NONE;
     }
 
     protected _onStateChange () {
-        this._setHash(Pass.getPassHash(this));
+        this._hash = Pass.getPassHash(this);
         this._owner.onPassStateChange(this._dontNotify);
     }
 }

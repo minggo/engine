@@ -24,12 +24,9 @@
 ****************************************************************************/
 
 #include "platform/empty/modules/SystemWindow.h"
-
+#include <functional>
 #include "base/Log.h"
 #include "base/Macros.h"
-
-// SDL headers
-#include <functional>
 #include "bindings/event/EventDispatcher.h"
 #include "platform/IEventDispatch.h"
 #include "platform/empty/EmptyPlatform.h"
@@ -52,7 +49,7 @@ uintptr_t SystemWindow::getWindowHandler() const {
 void SystemWindow::setCursorEnabled(bool value) {
 }
 
-void SystemWindow::copyTextToClipboard(const std::string &text) {
+void SystemWindow::copyTextToClipboard(const ccstd::string &text) {
     //TODO
 }
 

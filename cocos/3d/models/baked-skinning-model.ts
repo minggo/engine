@@ -23,7 +23,6 @@
  THE SOFTWARE.
 */
 
-import { JSB } from 'internal:constants';
 import type { AnimationClip } from '../../core/animation/animation-clip';
 import { Mesh } from '../assets/mesh';
 import { Skeleton } from '../assets/skeleton';
@@ -37,7 +36,6 @@ import { ModelType } from '../../core/renderer/scene/model';
 import { IAnimInfo, IJointTextureHandle } from '../skeletal-animation/skeletal-animation-utils';
 import { MorphModel } from './morph-model';
 import { legacyCC } from '../../core/global-exports';
-import { NativeAABB, NativeBakedSkinningModel } from '../../core/renderer/native-scene';
 import { jointTextureSamplerInfo } from '../misc/joint-texture-sampler-info';
 
 interface IJointsInfo {
@@ -55,11 +53,15 @@ const myPatches = [
 
 /**
  * @en
- * The skinning model that is using baked animation.
+ * The skinning model that is using GPU baked animation.
  * @zh
- * 预烘焙动画的蒙皮模型。
+ * GPU 预烘焙动画的蒙皮模型。
  */
 export class BakedSkinningModel extends MorphModel {
+    /**
+     * @en The animation clip that have been uploaded
+     * @zh 已被上传的动画片段
+     */
     public uploadedAnim: AnimationClip | null | undefined = undefined; // uninitialized
 
     private _jointsMedium: IJointsInfo;
@@ -78,12 +80,6 @@ export class BakedSkinningModel extends MorphModel {
         this._jointsMedium = { buffer: null, jointTextureInfo, animInfo, texture: null, boundsInfo: null };
     }
 
-    protected _init () {
-        if (JSB) {
-            this._nativeObj = new NativeBakedSkinningModel();
-        }
-    }
-
     public destroy () {
         this.uploadedAnim = undefined; // uninitialized
         this._jointsMedium.boundsInfo = null;
@@ -92,10 +88,10 @@ export class BakedSkinningModel extends MorphModel {
             this._jointsMedium.buffer = null;
         }
         this._applyJointTexture();
-        this._applyNativeJointMedium();
         super.destroy();
     }
 
+    // Override
     public bindSkeleton (skeleton: Skeleton | null = null, skinningRoot: Node | null = null, mesh: Mesh | null = null) {
         this._skeleton = skeleton;
         this._mesh = mesh;
@@ -113,8 +109,10 @@ export class BakedSkinningModel extends MorphModel {
         }
     }
 
+    // Override
     public updateTransform (stamp: number) {
         super.updateTransform(stamp);
+
         if (!this.uploadedAnim) { return; }
         const { animInfo, boundsInfo } = this._jointsMedium;
         const skelBound = boundsInfo![animInfo.data[0]];
@@ -126,9 +124,10 @@ export class BakedSkinningModel extends MorphModel {
         }
     }
 
-    // update fid buffer only when visible
+    // Override, update fid buffer only when visible
     public updateUBOs (stamp: number) {
         super.updateUBOs(stamp);
+
         const info = this._jointsMedium.animInfo;
         const idx = this._instAnimInfoIdx;
         if (idx >= 0) {
@@ -141,35 +140,21 @@ export class BakedSkinningModel extends MorphModel {
         return true;
     }
 
-    private _applyNativeJointMedium () {
-        if (JSB && this._nativeObj) {
-            const boundsInfo: NativeAABB[] = [];
-            if (this._jointsMedium.boundsInfo) {
-                this._jointsMedium.boundsInfo.forEach((bound: AABB) => {
-                    boundsInfo.push(bound.native);
-                });
-            }
-            const animInfoKey = 'nativeDirty';
-            (this._nativeObj as NativeBakedSkinningModel).setJointMedium(!!this.uploadedAnim, {
-                boundsInfo,
-                jointTextureInfo: this._jointsMedium.jointTextureInfo.buffer,
-                animInfo: {
-                    buffer: this._jointsMedium.animInfo.buffer,
-                    data: this._jointsMedium.animInfo.data.buffer,
-                    dirty: this._jointsMedium.animInfo[animInfoKey].buffer,
-                },
-                buffer: this._jointsMedium.buffer,
-            });
-        }
+    // Override
+    public getMacroPatches (subModelIndex: number): IMacroPatch[] | null {
+        const patches = super.getMacroPatches(subModelIndex);
+        return patches ? patches.concat(myPatches) : myPatches;
     }
 
-    protected _updateModelBounds (aabb: AABB | null) {
-        this._modelBounds = aabb;
-        if (JSB) {
-            (this._nativeObj! as NativeBakedSkinningModel).updateModelBounds(aabb ? aabb.native : null);
-        }
-    }
-
+    /**
+     * @en Pre-simulate and store the frames data of the given animation clip to a joint texture and upload it to GPU.
+     * Normally, it's automatically managed by [[SkeletalAnimationState]].
+     * But user can also use Joint Texture Layout Settings in the editor to manually organize the joint textures.
+     * @zh 预计算并存储一个指定动画片段的完整帧数据到一张骨骼贴图上，并将其上传到 GPU。
+     * 一般情况下 [[SkeletalAnimationState]] 会自动管理所有骨骼贴图，但用户也可以使用编辑器的骨骼贴图布局设置面板来手动管理所有骨骼贴图。
+     * @param anim @en The animation clip to be uploaded to the joint texture. @zh 需要上传到骨骼贴图上的动画片段。
+     * @returns void
+     */
     public uploadAnimation (anim: AnimationClip | null) {
         if (!this._skeleton || !this._mesh || this.uploadedAnim === anim) { return; }
         this.uploadedAnim = anim;
@@ -178,14 +163,13 @@ export class BakedSkinningModel extends MorphModel {
         if (anim) {
             texture = resMgr.jointTexturePool.getSequencePoseTexture(this._skeleton, anim, this._mesh, this.transform);
             this._jointsMedium.boundsInfo = texture && texture.bounds.get(this._mesh.hash)!;
-            this._updateModelBounds(null); // don't calc bounds again in Model
+            this._modelBounds = null; // don't calc bounds again in Model
         } else {
             texture = resMgr.jointTexturePool.getDefaultPoseTexture(this._skeleton, this._mesh, this.transform);
             this._jointsMedium.boundsInfo = null;
-            this._updateModelBounds(texture && texture.bounds.get(this._mesh.hash)![0]);
+	        this._modelBounds = texture && texture.bounds.get(this._mesh.hash)![0];
         }
         this._applyJointTexture(texture);
-        this._applyNativeJointMedium();
     }
 
     protected _applyJointTexture (texture: IJointTextureHandle | null = null) {
@@ -208,11 +192,6 @@ export class BakedSkinningModel extends MorphModel {
         }
     }
 
-    public getMacroPatches (subModelIndex: number): IMacroPatch[] | null {
-        const patches = super.getMacroPatches(subModelIndex);
-        return patches ? patches.concat(myPatches) : myPatches;
-    }
-
     protected _updateLocalDescriptors (submodelIdx: number, descriptorSet: DescriptorSet) {
         super._updateLocalDescriptors(submodelIdx, descriptorSet);
         const { buffer, texture, animInfo } = this._jointsMedium;
@@ -225,16 +204,9 @@ export class BakedSkinningModel extends MorphModel {
         }
     }
 
-    private _setInstAnimInfoIdx (idx: number) {
-        this._instAnimInfoIdx = idx;
-        if (JSB) {
-            (this._nativeObj! as NativeBakedSkinningModel).setAnimInfoIdx(idx);
-        }
-    }
-
     protected _updateInstancedAttributes (attributes: Attribute[], pass: Pass) {
         super._updateInstancedAttributes(attributes, pass);
-        this._setInstAnimInfoIdx(this._getInstancedAttributeIndex(INST_JOINT_ANIM_INFO));
+        this._instAnimInfoIdx = this._getInstancedAttributeIndex(INST_JOINT_ANIM_INFO);
         this.updateInstancedJointTextureInfo();
     }
 

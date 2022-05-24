@@ -23,14 +23,10 @@
  THE SOFTWARE.
  */
 
-/**
- * @packageDocumentation
- * @module terrain
- */
 import { ccclass, disallowMultiple, executeInEditMode, help, visible, type, serializable, editable, disallowAnimation } from 'cc.decorator';
 import { JSB } from 'internal:constants';
 import { builtinResMgr } from '../core/builtin';
-import { RenderableComponent } from '../core/components/renderable-component';
+import { ModelRenderer } from '../core/components/model-renderer';
 import { EffectAsset, Texture2D } from '../core/assets';
 import { Filter, PixelFormat, WrapMode } from '../core/assets/asset-enum';
 import { Material } from '../core/assets/material';
@@ -50,7 +46,7 @@ import { TerrainLod, TerrainLodKey, TERRAIN_LOD_LEVELS, TERRAIN_LOD_MAX_DISTANCE
 import { TerrainAsset, TerrainLayerInfo, TERRAIN_HEIGHT_BASE, TERRAIN_HEIGHT_FACTORY,
     TERRAIN_BLOCK_TILE_COMPLEXITY, TERRAIN_BLOCK_VERTEX_SIZE, TERRAIN_BLOCK_VERTEX_COMPLEXITY,
     TERRAIN_MAX_LAYER_COUNT, TERRAIN_HEIGHT_FMIN, TERRAIN_HEIGHT_FMAX, TERRAIN_MAX_BLEND_LAYERS, TERRAIN_DATA_VERSION5 } from './terrain-asset';
-import { CCBoolean, CCFloat, CCInteger, Node, PipelineEventType, RenderPipeline } from '../core';
+import { CCBoolean, CCFloat, CCInteger, Node, PipelineEventType } from '../core';
 
 /**
  * @en Terrain info
@@ -178,7 +174,7 @@ export class TerrainLayer {
  * @en Terrain renderable
  * @zh 地形渲染组件
  */
-class TerrainRenderable extends RenderableComponent {
+class TerrainRenderable extends ModelRenderer {
     /**
      * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
      */
@@ -792,7 +788,7 @@ export class TerrainBlock {
     public _getMaterialDefines (nlayers: number): MacroRecord {
         return {
             LAYERS: nlayers + 1,
-            USE_LIGHTMAP: this.lightmap !== null ? 1 : 0,
+            CC_USE_LIGHTMAP: this.lightmap !== null ? 1 : 0,
             USE_NORMALMAP: this._terrain.useNormalMap ? 1 : 0,
             USE_PBR: this._terrain.usePBR ? 1 : 0,
             // CC_RECEIVE_SHADOW: this._terrain.receiveShadow ? 1 : 0,
@@ -1595,11 +1591,11 @@ export class Terrain extends Component {
             this._blocks[i].visible = true;
         }
 
-        legacyCC.director.root.pipeline.on(PipelineEventType.RENDER_CAMERA_BEGIN, this.onUpdateFromCamera, this);
+        (legacyCC.director.root as Root).pipelineEvent.on(PipelineEventType.RENDER_CAMERA_BEGIN, this.onUpdateFromCamera, this);
     }
 
     public onDisable () {
-        legacyCC.director.root.pipeline.off(PipelineEventType.RENDER_CAMERA_BEGIN, this.onUpdateFromCamera, this);
+        (legacyCC.director.root as Root).pipelineEvent.off(PipelineEventType.RENDER_CAMERA_BEGIN, this.onUpdateFromCamera, this);
 
         for (let i = 0; i < this._blocks.length; ++i) {
             this._blocks[i].visible = false;
@@ -2209,7 +2205,7 @@ export class Terrain extends Component {
         }
 
         const terrainAsset = this.__asset;
-        if (this._buitinAsset != terrainAsset) {
+        if (this._buitinAsset !== terrainAsset) {
             this._buitinAsset = terrainAsset;
         }
 

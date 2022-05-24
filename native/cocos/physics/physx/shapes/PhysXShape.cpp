@@ -24,7 +24,7 @@
 ****************************************************************************/
 
 #include "physics/physx/shapes/PhysXShape.h"
-#include <unordered_map>
+#include "base/std/container/unordered_map.h"
 #include "physics/physx/PhysXSharedBody.h"
 #include "physics/physx/PhysXUtils.h"
 #include "physics/physx/PhysXWorld.h"
@@ -32,9 +32,9 @@
 namespace cc {
 namespace physics {
 
-void PhysXShape::initialize(scene::Node *node) {
+void PhysXShape::initialize(Node *node) {
     PhysXWorld &ins = PhysXWorld::getInstance();
-    _mSharedBody    = ins.getSharedBody(node);
+    _mSharedBody = ins.getSharedBody(node);
     getSharedBody().reference(true);
     onComponentSet();
     insertToShapeMap();
@@ -102,18 +102,18 @@ void PhysXShape::setMask(uint32_t m) {
 void PhysXShape::updateEventListener(EShapeFilterFlag flag) {
 }
 
-scene::AABB &PhysXShape::getAABB() {
-    static scene::AABB aabb;
+geometry::AABB &PhysXShape::getAABB() {
+    static geometry::AABB aabb;
     if (_mShape) {
         auto bounds = physx::PxShapeExt::getWorldBounds(getShape(), *getSharedBody().getImpl().rigidActor);
-        pxSetVec3Ext(aabb.getLayout()->center, (bounds.maximum + bounds.minimum) / 2);
-        pxSetVec3Ext(aabb.getLayout()->halfExtents, (bounds.maximum - bounds.minimum) / 2);
+        pxSetVec3Ext(aabb.center, (bounds.maximum + bounds.minimum) / 2);
+        pxSetVec3Ext(aabb.halfExtents, (bounds.maximum - bounds.minimum) / 2);
     }
     return aabb;
 }
 
-scene::Sphere &PhysXShape::getBoundingSphere() {
-    static scene::Sphere sphere;
+geometry::Sphere &PhysXShape::getBoundingSphere() {
+    static geometry::Sphere sphere;
     if (_mShape) sphere.define(getAABB());
     return sphere;
 }
@@ -123,7 +123,7 @@ void PhysXShape::updateFilterData(const physx::PxFilterData &data) {
 
 void PhysXShape::updateCenter() {
     if (!_mShape) return;
-    auto &sb   = getSharedBody();
+    auto &sb = getSharedBody();
     auto *node = sb.getNode();
     node->updateWorldTransform();
     physx::PxTransform local{_mCenter * node->getWorldScale(), _mRotation};

@@ -31,6 +31,7 @@ THE SOFTWARE.
 
 #include "cocos/base/Log.h"
 #include "cocos/platform/FileUtils.h"
+#include "cocos/base/memory/Memory.h"
 
 #if ((CC_PLATFORM == CC_PLATFORM_WINDOWS) || (CC_PLATFORM == CC_PLATFORM_MAC_OSX))
     #include "DeviceEx.h"
@@ -123,7 +124,7 @@ void RuntimeEngine::setupRuntime() {
     entryFile = ConfigParser::getInstance()->getEntryFile();
 #endif
     _launchEvent = "js";
-    _runtime = _runtimes[kRuntimeEngineJs];
+    _runtime     = _runtimes[kRuntimeEngineJs];
 }
 
 void RuntimeEngine::setProjectConfig(const ProjectConfig &config) {
@@ -150,12 +151,12 @@ void RuntimeEngine::setProjectPath(const std::string &workPath) {
                     nEnd = i;
             }
             szAppDir[nEnd] = 0;
-            int iLen = 2 * wcslen((wchar_t *)szAppDir);
-            char *chRtn = new char[iLen + 1];
+            int   iLen     = 2 * wcslen((wchar_t *)szAppDir);
+            char *chRtn    = new char[iLen + 1];
             wcstombs(chRtn, (wchar_t *)szAppDir, iLen + 1);
             std::string strPath = chRtn;
             delete[] chRtn;
-            chRtn = NULL;
+            chRtn                 = NULL;
             char fuldir[MAX_PATH] = {0};
             _fullpath(fuldir, strPath.c_str(), MAX_PATH);
             appPath = fuldir;
@@ -163,7 +164,7 @@ void RuntimeEngine::setProjectPath(const std::string &workPath) {
     #elif (CC_PLATFORM == CC_PLATFORM_MAC_OSX)
         appPath.append("/../../../");
     #endif
-        appPath = replaceAll(appPath, "\\", "/");
+        appPath       = replaceAll(appPath, "\\", "/");
         g_projectPath = appPath;
     } else {
         g_projectPath = workPath;
@@ -189,7 +190,6 @@ void RuntimeEngine::startScript(const std::string &args) {
 }
 
 void RuntimeEngine::start() {
-
 #if (CC_PLATFORM != CC_PLATFORM_WINDOWS) && (CC_PLATFORM != CC_PLATFORM_MAC_OSX)
     _project.setDebuggerType(kCCRuntimeDebuggerCodeIDE);
 #endif
@@ -250,7 +250,7 @@ RuntimeProtocol *RuntimeEngine::getRuntime() {
 
 void RuntimeEngine::updateConfigParser() {
     // set entry file
-    auto parser = ConfigParser::getInstance();
+    auto   parser = ConfigParser::getInstance();
     string entryFile(_project.getScriptFileRealPath());
     if (entryFile.find(_project.getProjectDir()) != string::npos) {
         entryFile.erase(0, _project.getProjectDir().length());
@@ -282,7 +282,7 @@ void RuntimeEngine::trackEvent(const std::string &eventName) {
     char cidBuf[64] = {0};
     auto guid = player::DeviceEx::getInstance()->getUserGUID();
     snprintf(cidBuf, sizeof(cidBuf), "%x", XXH32(guid.c_str(), (int)guid.length(), 0));
-    auto request = cc::extra::HTTPRequest::createWithUrl(NULL,
+    IntrusivePtr<HTTPRequest> request = cc::extra::HTTPRequest::createWithUrl(NULL,
                                                      "http://www.google-analytics.com/collect",
                                                      kCCHTTPRequestMethodPOST);
     request->addPOSTValue("v", "1");

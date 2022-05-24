@@ -24,12 +24,13 @@
 ****************************************************************************/
 
 #include "physics/sdk/Joint.h"
+#include "base/memory/Memory.h"
 #include "physics/PhysicsSelector.h"
 
 #define CC_PHYSICS_JOINT_DEFINITION(CLASS, WRAPPED) \
                                                     \
     CLASS::CLASS() {                                \
-        _impl.reset(new WRAPPED());                 \
+        _impl.reset(ccnew WRAPPED());               \
     }                                               \
                                                     \
     CLASS::~CLASS() {                               \
@@ -40,7 +41,7 @@
         return _impl->getImpl();                    \
     }                                               \
                                                     \
-    void CLASS::initialize(scene::Node* node) {     \
+    void CLASS::initialize(Node *node) {            \
         _impl->initialize(node);                    \
     }                                               \
                                                     \

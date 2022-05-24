@@ -24,33 +24,37 @@
 ****************************************************************************/
 
 #include "UIPhase.h"
+#include "RenderPipeline.h"
 #include "gfx-base/GFXCommandBuffer.h"
 #include "pipeline/PipelineStateManager.h"
+#include "scene/Camera.h"
+#include "scene/DrawBatch2D.h"
 #include "scene/RenderScene.h"
 #include "scene/SubModel.h"
+#include "scene/Pass.h"
 
 namespace cc {
 namespace pipeline {
 
 void UIPhase::activate(RenderPipeline *pipeline) {
     _pipeline = pipeline;
-    _phaseID  = getPhaseID("default");
+    _phaseID = getPhaseID("default");
 };
 
 void UIPhase::render(scene::Camera *camera, gfx::RenderPass *renderPass) {
     auto *cmdBuff = _pipeline->getCommandBuffers()[0];
 
-    const auto &batches = camera->scene->getDrawBatch2Ds();
+    const auto &batches = camera->getScene()->getDrawBatch2Ds();
     // Notice: The batches[0] is batchCount
     for (auto *batch : batches) {
-        if (!(camera->visibility & batch->visFlags)) continue;
+        if (!(camera->getVisibility() & batch->visFlags)) continue;
         for (size_t i = 0; i < batch->shaders.size(); ++i) {
             const auto *pass = batch->passes[i];
             if (pass->getPhase() != _phaseID) continue;
-            auto *shader         = batch->shaders[i];
+            auto *shader = batch->shaders[i];
             auto *inputAssembler = batch->inputAssembler;
-            auto *ds             = batch->descriptorSet;
-            auto *pso            = PipelineStateManager::getOrCreatePipelineState(pass, shader, inputAssembler, renderPass);
+            auto *ds = batch->descriptorSet;
+            auto *pso = PipelineStateManager::getOrCreatePipelineState(pass, shader, inputAssembler, renderPass);
             cmdBuff->bindPipelineState(pso);
             cmdBuff->bindDescriptorSet(materialSet, pass->getDescriptorSet());
             cmdBuff->bindInputAssembler(inputAssembler);

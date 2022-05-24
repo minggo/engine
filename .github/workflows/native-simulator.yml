@@ -42,12 +42,12 @@ jobs:
           rm userconf.ini
       - name: gen simulator
         run: |
-          gulp gen-simulator-release
+          gulp gen-simulator
       - name: check result
         run: |
           Get-ChildItem ./simulator/Debug -Name SimulatorApp-Win32.exe
           if(Test-Path ./simulator/Debug/SimulatorApp-Win32.exe) {exit 0} else {exit 1}
-  
+
   # mac_gen_simulator:
   #   runs-on: macos-latest
   #   name: MacOS

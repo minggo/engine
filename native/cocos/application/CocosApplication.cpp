@@ -39,9 +39,9 @@
 namespace cc {
 
 CocosApplication::CocosApplication() {
-    _engine      = BaseEngine::createEngine();
+    _engine = BaseEngine::createEngine();
     _systemWidow = _engine->getInterface<ISystemWindow>();
-    CCASSERT(_systemWidow != nullptr, "Invalid interface pointer");
+    CC_ASSERT(_systemWidow != nullptr);
 }
 
 CocosApplication::~CocosApplication() {
@@ -78,9 +78,9 @@ int CocosApplication::init() {
     se->start();
 
 #if (CC_PLATFORM == CC_PLATFORM_MAC_IOS)
-    auto     logicSize  = _systemWidow->getViewSize();
-    IScreen *screen     = _engine->getInterface<IScreen>();
-    float    pixelRatio = screen->getDevicePixelRatio();
+    auto logicSize = _systemWidow->getViewSize();
+    IScreen *screen = _engine->getInterface<IScreen>();
+    float pixelRatio = screen->getDevicePixelRatio();
     cc::EventDispatcher::dispatchResizeEvent(logicSize.x * pixelRatio, logicSize.y * pixelRatio);
 #endif
     return 0;
@@ -121,17 +121,17 @@ void CocosApplication::onResume() {
 }
 
 void CocosApplication::onClose() {
-    // TODO(cc): Handling close events
+    close();
 }
 
-void CocosApplication::setDebugIpAndPort(const std::string &serverAddr, uint32_t port, bool isWaitForConnect) {
+void CocosApplication::setDebugIpAndPort(const ccstd::string &serverAddr, uint32_t port, bool isWaitForConnect) {
 #if defined(CC_DEBUG) && (CC_DEBUG > 0)
     // Enable debugger here
     jsb_enable_debugger(serverAddr, port, isWaitForConnect);
 #endif
 }
 
-void CocosApplication::runScript(const std::string &filePath) {
+void CocosApplication::runScript(const ccstd::string &filePath) {
     jsb_run_script(filePath);
 }
 
@@ -140,7 +140,7 @@ void CocosApplication::handleException(const char *location, const char *message
     CC_LOG_ERROR("\nUncaught Exception:\n - location :  %s\n - msg : %s\n - detail : \n      %s\n", location, message, stack);
 }
 
-void CocosApplication::setXXTeaKey(const std::string &key) {
+void CocosApplication::setXXTeaKey(const ccstd::string &key) {
     jsb_set_xxtea_key(key);
 }
 #if CC_PLATFORM == CC_PLATFORM_WINDOWS || CC_PLATFORM == CC_PLATFORM_LINUX || CC_PLATFORM == CC_PLATFORM_QNX || CC_PLATFORM == CC_PLATFORM_MAC_OSX

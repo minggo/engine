@@ -29,13 +29,13 @@
 
 namespace cc {
 namespace scene {
-struct Camera;
+class Camera;
 }
 namespace pipeline {
 
 class RenderPipeline;
 
-class CC_DLL RenderQueue : public Object {
+class CC_DLL RenderQueue final {
 public:
     explicit RenderQueue(RenderPipeline *pipeline, RenderQueueCreateInfo desc, bool useOcclusionQuery = false);
 
@@ -46,10 +46,10 @@ public:
     bool empty() { return _queue.empty(); }
 
 private:
-    RenderPipeline *      _pipeline = nullptr;
-    RenderPassList        _queue;
+    RenderPipeline *_pipeline = nullptr;
+    RenderPassList _queue;
     RenderQueueCreateInfo _passDesc;
-    bool                  _useOcclusionQuery{false};
+    bool _useOcclusionQuery{false};
 };
 
 } // namespace pipeline

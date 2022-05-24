@@ -26,20 +26,21 @@
 #include "Define.h"
 #include "bindings/jswrapper/SeApi.h"
 #include "gfx-base/GFXDevice.h"
+#include "scene/Light.h"
 
 namespace cc {
 namespace pipeline {
 
-static uint32_t globalUBOCount     = static_cast<uint32_t>(PipelineGlobalBindings::SAMPLER_SHADOWMAP);
+static uint32_t globalUBOCount = static_cast<uint32_t>(PipelineGlobalBindings::SAMPLER_SHADOWMAP);
 static uint32_t globalSamplerCount = static_cast<uint32_t>(PipelineGlobalBindings::COUNT) - globalUBOCount;
 
-static uint32_t localUBOCount          = static_cast<uint32_t>(ModelLocalBindings::SAMPLER_JOINTS);
-static uint32_t localSamplerCount      = static_cast<uint32_t>(ModelLocalBindings::STORAGE_REFLECTION) - localUBOCount;
+static uint32_t localUBOCount = static_cast<uint32_t>(ModelLocalBindings::SAMPLER_JOINTS);
+static uint32_t localSamplerCount = static_cast<uint32_t>(ModelLocalBindings::STORAGE_REFLECTION) - localUBOCount;
 static uint32_t localStorageImageCount = static_cast<uint32_t>(ModelLocalBindings::COUNT) - localUBOCount - localSamplerCount;
 
-uint globalSet   = static_cast<uint>(SetIndex::GLOBAL);
+uint globalSet = static_cast<uint>(SetIndex::GLOBAL);
 uint materialSet = static_cast<uint>(SetIndex::MATERIAL);
-uint localSet    = static_cast<uint>(SetIndex::LOCAL);
+uint localSet = static_cast<uint>(SetIndex::LOCAL);
 
 gfx::BindingMappingInfo bindingMappingInfo = {
     {globalUBOCount, 0, localUBOCount},         // Uniform Buffer Counts
@@ -52,9 +53,9 @@ gfx::BindingMappingInfo bindingMappingInfo = {
     {0, 2, 1},                                  // Set Order Indices
 };
 
-DescriptorSetLayoutInfos              globalDescriptorSetLayout;
-DescriptorSetLayoutInfos              localDescriptorSetLayout;
-const String                          UBOGlobal::NAME       = "CCGlobal";
+DescriptorSetLayoutInfos globalDescriptorSetLayout;
+DescriptorSetLayoutInfos localDescriptorSetLayout;
+const ccstd::string UBOGlobal::NAME = "CCGlobal";
 const gfx::DescriptorSetLayoutBinding UBOGlobal::DESCRIPTOR = {
     UBOGlobal::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -74,7 +75,7 @@ const gfx::UniformBlock UBOGlobal::LAYOUT = {
     1,
 };
 
-const String                          UBOLocalBatched::NAME       = "CCLocalBatched";
+const ccstd::string UBOLocalBatched::NAME = "CCLocalBatched";
 const gfx::DescriptorSetLayoutBinding UBOLocalBatched::DESCRIPTOR = {
     UBOLocalBatched::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -92,7 +93,7 @@ const gfx::UniformBlock UBOLocalBatched::LAYOUT = {
     1,
 };
 
-const String                          UBOCamera::NAME       = "CCCamera";
+const ccstd::string UBOCamera::NAME = "CCCamera";
 const gfx::DescriptorSetLayoutBinding UBOCamera::DESCRIPTOR = {
     UBOCamera::BINDING,
     gfx::DescriptorType::DYNAMIC_UNIFORM_BUFFER,
@@ -112,6 +113,7 @@ const gfx::UniformBlock UBOCamera::LAYOUT = {
         {"cc_matViewProj", gfx::Type::MAT4, 1},
         {"cc_matViewProjInv", gfx::Type::MAT4, 1},
         {"cc_cameraPos", gfx::Type::FLOAT4, 1},
+        {"cc_surfaceTransform", gfx::Type::FLOAT4, 1},
         {"cc_screenScale", gfx::Type::FLOAT4, 1},
         {"cc_exposure", gfx::Type::FLOAT4, 1},
         {"cc_mainLitDir", gfx::Type::FLOAT4, 1},
@@ -127,7 +129,7 @@ const gfx::UniformBlock UBOCamera::LAYOUT = {
     1,
 };
 
-const String                          UBOShadow::NAME       = "CCShadow";
+const ccstd::string UBOShadow::NAME = "CCShadow";
 const gfx::DescriptorSetLayoutBinding UBOShadow::DESCRIPTOR = {
     UBOShadow::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -155,7 +157,7 @@ const gfx::UniformBlock UBOShadow::LAYOUT = {
     1,
 };
 
-const String                          UBOLocal::NAME       = "CCLocal";
+const ccstd::string UBOLocal::NAME = "CCLocal";
 const gfx::DescriptorSetLayoutBinding UBOLocal::DESCRIPTOR = {
     UBOLocal::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -176,7 +178,7 @@ const gfx::UniformBlock UBOLocal::LAYOUT = {
     1,
 };
 
-const String                          UBOWorldBound::NAME       = "CCWorldBound";
+const ccstd::string UBOWorldBound::NAME = "CCWorldBound";
 const gfx::DescriptorSetLayoutBinding UBOWorldBound::DESCRIPTOR = {
     UBOWorldBound::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -195,7 +197,7 @@ const gfx::UniformBlock UBOWorldBound::LAYOUT = {
     1,
 };
 
-const String                          UBOForwardLight::NAME       = "CCForwardLight";
+const ccstd::string UBOForwardLight::NAME = "CCForwardLight";
 const gfx::DescriptorSetLayoutBinding UBOForwardLight::DESCRIPTOR = {
     UBOForwardLight::BINDING,
     gfx::DescriptorType::DYNAMIC_UNIFORM_BUFFER,
@@ -216,7 +218,7 @@ const gfx::UniformBlock UBOForwardLight::LAYOUT = {
     1,
 };
 
-const String                          UBOSkinningTexture::NAME       = "CCSkinningTexture";
+const ccstd::string UBOSkinningTexture::NAME = "CCSkinningTexture";
 const gfx::DescriptorSetLayoutBinding UBOSkinningTexture::DESCRIPTOR = {
     UBOSkinningTexture::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -234,7 +236,7 @@ const gfx::UniformBlock UBOSkinningTexture::LAYOUT = {
     1,
 };
 
-const String                          UBOSkinningAnimation::NAME       = "CCSkinningAnimation";
+const ccstd::string UBOSkinningAnimation::NAME = "CCSkinningAnimation";
 const gfx::DescriptorSetLayoutBinding UBOSkinningAnimation::DESCRIPTOR = {
     UBOSkinningAnimation::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -252,7 +254,7 @@ const gfx::UniformBlock UBOSkinningAnimation::LAYOUT = {
     1,
 };
 
-const String                          UBOSkinning::NAME       = "CCSkinning";
+const ccstd::string UBOSkinning::NAME = "CCSkinning";
 const gfx::DescriptorSetLayoutBinding UBOSkinning::DESCRIPTOR = {
     UBOSkinning::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
@@ -270,10 +272,10 @@ const gfx::UniformBlock UBOSkinning::LAYOUT = {
     1,
 };
 
-const uint                            UBOMorph::COUNT_BASE_4_BYTES = static_cast<uint>(4 * std::ceil(UBOMorph::MAX_MORPH_TARGET_COUNT / 4) + 4);
-const uint                            UBOMorph::SIZE               = UBOMorph::COUNT_BASE_4_BYTES * 4;
-const String                          UBOMorph::NAME               = "CCMorph";
-const gfx::DescriptorSetLayoutBinding UBOMorph::DESCRIPTOR         = {
+const uint UBOMorph::COUNT_BASE_4_BYTES = static_cast<uint>(4 * std::ceil(UBOMorph::MAX_MORPH_TARGET_COUNT / 4) + 4);
+const uint UBOMorph::SIZE = UBOMorph::COUNT_BASE_4_BYTES * 4;
+const ccstd::string UBOMorph::NAME = "CCMorph";
+const gfx::DescriptorSetLayoutBinding UBOMorph::DESCRIPTOR = {
     UBOMorph::BINDING,
     gfx::DescriptorType::UNIFORM_BUFFER,
     1,
@@ -286,12 +288,12 @@ const gfx::UniformBlock UBOMorph::LAYOUT = {
     UBOMorph::NAME,
     {
         {"cc_displacementWeights", gfx::Type::FLOAT4, static_cast<uint>(UBOMorph::MAX_MORPH_TARGET_COUNT / 4)},
-        {"cc_displacementWeights", gfx::Type::FLOAT4, 1},
+        {"cc_displacementTextureInfo", gfx::Type::FLOAT4, 1},
     },
     1,
 };
 
-const String                          UBOUILocal::NAME       = "CCMorph";
+const ccstd::string UBOUILocal::NAME = "CCUILocal";
 const gfx::DescriptorSetLayoutBinding UBOUILocal::DESCRIPTOR = {
     UBOUILocal::BINDING,
     gfx::DescriptorType::DYNAMIC_UNIFORM_BUFFER,
@@ -308,7 +310,7 @@ const gfx::UniformBlock UBOUILocal::LAYOUT = {
     1,
 };
 
-const String                          SHADOWMAP::NAME       = "cc_shadowMap";
+const ccstd::string SHADOWMAP::NAME = "cc_shadowMap";
 const gfx::DescriptorSetLayoutBinding SHADOWMAP::DESCRIPTOR = {
     SHADOWMAP::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -324,7 +326,7 @@ const gfx::UniformSamplerTexture SHADOWMAP::LAYOUT = {
     1,
 };
 
-const String                          ENVIRONMENT::NAME       = "cc_environment";
+const ccstd::string ENVIRONMENT::NAME = "cc_environment";
 const gfx::DescriptorSetLayoutBinding ENVIRONMENT::DESCRIPTOR = {
     ENVIRONMENT::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -340,7 +342,7 @@ const gfx::UniformSamplerTexture ENVIRONMENT::LAYOUT = {
     1,
 };
 
-const String                          SPOTLIGHTINGMAP::NAME       = "cc_spotLightingMap";
+const ccstd::string SPOTLIGHTINGMAP::NAME = "cc_spotLightingMap";
 const gfx::DescriptorSetLayoutBinding SPOTLIGHTINGMAP::DESCRIPTOR = {
     SPOTLIGHTINGMAP::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -356,7 +358,7 @@ const gfx::UniformSamplerTexture SPOTLIGHTINGMAP::LAYOUT = {
     1,
 };
 
-const String                          DIFFUSEMAP::NAME       = "cc_diffuseMap";
+const ccstd::string DIFFUSEMAP::NAME = "cc_diffuseMap";
 const gfx::DescriptorSetLayoutBinding DIFFUSEMAP::DESCRIPTOR = {
     DIFFUSEMAP::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -372,7 +374,7 @@ const gfx::UniformSamplerTexture DIFFUSEMAP::LAYOUT = {
     1,
 };
 
-const String                          JOINTTEXTURE::NAME       = "cc_jointTexture";
+const ccstd::string JOINTTEXTURE::NAME = "cc_jointTexture";
 const gfx::DescriptorSetLayoutBinding JOINTTEXTURE::DESCRIPTOR = {
     JOINTTEXTURE::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -388,7 +390,7 @@ const gfx::UniformSamplerTexture JOINTTEXTURE::LAYOUT = {
     1,
 };
 
-const String                          POSITIONMORPH::NAME       = "cc_PositionDisplacements";
+const ccstd::string POSITIONMORPH::NAME = "cc_PositionDisplacements";
 const gfx::DescriptorSetLayoutBinding POSITIONMORPH::DESCRIPTOR = {
     POSITIONMORPH::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -404,7 +406,7 @@ const gfx::UniformSamplerTexture POSITIONMORPH::LAYOUT = {
     1,
 };
 
-const String                          NORMALMORPH::NAME       = "cc_NormalDisplacements";
+const ccstd::string NORMALMORPH::NAME = "cc_NormalDisplacements";
 const gfx::DescriptorSetLayoutBinding NORMALMORPH::DESCRIPTOR = {
     NORMALMORPH::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -420,7 +422,7 @@ const gfx::UniformSamplerTexture NORMALMORPH::LAYOUT = {
     1,
 };
 
-const String                          TANGENTMORPH::NAME       = "cc_TangentDisplacements";
+const ccstd::string TANGENTMORPH::NAME = "cc_TangentDisplacements";
 const gfx::DescriptorSetLayoutBinding TANGENTMORPH::DESCRIPTOR = {
     TANGENTMORPH::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -436,7 +438,7 @@ const gfx::UniformSamplerTexture TANGENTMORPH::LAYOUT = {
     1,
 };
 
-const String                          LIGHTMAPTEXTURE::NAME       = "cc_lightingMap";
+const ccstd::string LIGHTMAPTEXTURE::NAME = "cc_lightingMap";
 const gfx::DescriptorSetLayoutBinding LIGHTMAPTEXTURE::DESCRIPTOR = {
     LIGHTMAPTEXTURE::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -452,7 +454,7 @@ const gfx::UniformSamplerTexture LIGHTMAPTEXTURE::LAYOUT = {
     1,
 };
 
-const String                          SPRITETEXTURE::NAME       = "cc_spriteTexture";
+const ccstd::string SPRITETEXTURE::NAME = "cc_spriteTexture";
 const gfx::DescriptorSetLayoutBinding SPRITETEXTURE::DESCRIPTOR = {
     SPRITETEXTURE::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -468,7 +470,7 @@ const gfx::UniformSamplerTexture SPRITETEXTURE::LAYOUT = {
     1,
 };
 
-const String                          REFLECTIONTEXTURE::NAME       = "cc_reflectionTexture";
+const ccstd::string REFLECTIONTEXTURE::NAME = "cc_reflectionTexture";
 const gfx::DescriptorSetLayoutBinding REFLECTIONTEXTURE::DESCRIPTOR = {
     REFLECTIONTEXTURE::BINDING,
     gfx::DescriptorType::SAMPLER_TEXTURE,
@@ -484,7 +486,7 @@ const gfx::UniformSamplerTexture REFLECTIONTEXTURE::LAYOUT = {
     1,
 };
 
-const String                          REFLECTIONSTORAGE::NAME       = "cc_reflectionStorage";
+const ccstd::string REFLECTIONSTORAGE::NAME = "cc_reflectionStorage";
 const gfx::DescriptorSetLayoutBinding REFLECTIONSTORAGE::DESCRIPTOR = {
     REFLECTIONSTORAGE::BINDING,
     gfx::DescriptorType::STORAGE_IMAGE,
@@ -521,25 +523,17 @@ bool supportsR32FloatTexture(gfx::Device *device) {
     return hasAllFlags(device->getFormatFeatures(gfx::Format::R32F), gfx::FormatFeature::RENDER_TARGET | gfx::FormatFeature::SAMPLED_TEXTURE);
 }
 
-uint getPhaseID(const String &phase) {
-    se::Object *globalObj = se::ScriptEngine::getInstance()->getGlobalObject();
+static ccstd::unordered_map<ccstd::string, uint32_t> phases; //cjh how to clear this global variable when exiting game?
+static uint32_t phaseNum = 0;
 
-    se::Value nrValue;
-    if (!globalObj->getProperty("nr", &nrValue)) {
-        CC_LOG_ERROR("getPhaseID: failed to get nr property.");
-        return 0;
+uint getPhaseID(const ccstd::string &phaseName) {
+    auto iter = phases.find(phaseName);
+    if (iter == phases.end()) {
+        phases.emplace(phaseName, 1 << phaseNum);
+        ++phaseNum;
     }
-    se::Object *nrObjct = nrValue.toObject();
-    se::Value   nrPhase;
-    if (!nrObjct->getProperty("getPhaseID", &nrPhase)) {
-        CC_LOG_ERROR("getPhaseID: failed to get getPhaseID property.");
-        return 0;
-    }
-    se::ValueArray args;
-    args.push_back(se::Value(phase));
-    se::Value nrResult;
-    nrPhase.toObject()->call(args, nullptr, &nrResult);
-    return nrResult.toUint32();
+    return phases.at(phaseName);
 }
+
 } // namespace pipeline
 } // namespace cc

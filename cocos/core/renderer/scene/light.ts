@@ -23,12 +23,10 @@
  THE SOFTWARE.
  */
 
-import { JSB } from 'internal:constants';
 import { Vec3 } from '../../math';
 import { TransformBit } from '../../scene-graph/node-enum';
 import { RenderScene } from '../core/render-scene';
 import { Node } from '../../scene-graph';
-import { NativeDirectionalLight, NativeLight, NativeSphereLight, NativeSpotLight } from '../native-scene';
 
 // Color temperature (in Kelvin) to RGB
 export function ColorTemperatureToRGB (rgb: Vec3, kelvin: number) {
@@ -57,6 +55,10 @@ export function ColorTemperatureToRGB (rgb: Vec3, kelvin: number) {
     rgb.z =  0.0556434 * X + -0.2040259 +  1.0572252 * Z;
 }
 
+/**
+ * @en The light type enumeration.
+ * @zh 光源类型枚举。
+ */
 export enum LightType {
     DIRECTIONAL,
     SPHERE,
@@ -66,77 +68,64 @@ export enum LightType {
 
 export const nt2lm = (size: number) => 4 * Math.PI * Math.PI * size * size;
 
+/**
+ * @en The abstract light class of the render scene
+ * @zh 渲染场景中的光源基类
+ */
 export class Light {
-    protected declare _nativeObj: NativeLight | null;
-    protected _init (): void {
-        if (JSB) {
-            switch (this._type) {
-            case LightType.DIRECTIONAL:
-                this._nativeObj = new NativeDirectionalLight();
-                break;
-            case LightType.SPHERE:
-                this._nativeObj = new NativeSphereLight();
-                break;
-            case LightType.SPOT:
-                this._nativeObj = new NativeSpotLight();
-                break;
-            default:
-                break;
-            }
-            this._nativeObj!.setType(this._type);
-        }
-    }
-    protected _destroy (): void {
-        if (JSB) {
-            this._nativeObj = null;
-        }
-    }
-
+    /**
+     * @en Whether it's a baked light source, baked light will be ignored in real time lighting pass
+     * @zh 是否是烘焙光源，烘焙光源会在实时光照计算中被忽略
+     */
     get baked () {
         return this._baked;
     }
 
     set baked (val) {
         this._baked = val;
-        if (JSB) {
-            this._nativeObj!.setBaked(val);
-        }
     }
 
+    /**
+     * @en The color of the light
+     * @zh 光源的颜色
+     */
     set color (color: Vec3) {
         this._color.set(color);
-        if (JSB) {
-            this._nativeObj!.setColor(color);
-        }
     }
 
     get color (): Vec3 {
         return this._color;
     }
 
+    /**
+     * @en Whether to use color temperature
+     * @zh 是否使用光源的色温
+     */
     set useColorTemperature (enable: boolean) {
         this._useColorTemperature = enable;
-        if (JSB) {
-            this._nativeObj!.setUseColorTemperature(enable);
-        }
     }
 
     get useColorTemperature (): boolean {
         return this._useColorTemperature;
     }
 
+    /**
+     * @en The color temperature of the light
+     * @zh 光源的色温
+     */
     set colorTemperature (val: number) {
         this._colorTemp = val;
         ColorTemperatureToRGB(this._colorTempRGB, this._colorTemp);
-        if (JSB) {
-            this._nativeObj!.setColorTemperatureRGB(this._colorTempRGB);
-        }
     }
 
     get colorTemperature (): number {
         return this._colorTemp;
     }
 
+    /**
+     * @en The float RGB value of the color temperature, each channel is from 0 to 1
+     * @zh 色温的浮点数颜色值，每个通道都是从 0 到 1
+     */
     get colorTemperatureRGB (): Vec3 {
         return this._colorTempRGB;
     }
@@ -145,20 +134,29 @@ export class Light {
         this._node = n;
         if (this._node) {
             this._node.hasChangedFlags |= TransformBit.ROTATION;
-            if (JSB) {
-                this._nativeObj!.setNode(n ? n.native : null);
-            }
         }
     }
 
+    /**
+     * @en The node which owns the light source
+     * @zh 光源归属的节点
+     */
     get node () {
         return this._node;
     }
 
+    /**
+     * @en The type of the light source, e.g. directional light, spot light, etc
+     * @zh 光源的类型，比如方向光、聚光灯等
+     */
     get type () : LightType {
         return this._type;
     }
 
+    /**
+     * @en The name of the light source
+     * @zh 光源的名字
+     */
     get name () {
         return this._name;
     }
@@ -167,12 +165,12 @@ export class Light {
         this._name = n;
     }
 
+    /**
+     * @en The render scene which owns the current light
+     * @zh 光源所属的渲染场景
+     */
     get scene () {
         return this._scene;
-    }
-
-    get native (): NativeLight {
-        return this._nativeObj!;
     }
 
     protected _baked = false;
@@ -194,15 +192,23 @@ export class Light {
     protected _type: LightType = LightType.UNKNOWN;
 
     public initialize () {
-        this._init();
         this.color = new Vec3(1, 1, 1);
         this.colorTemperature = 6550.0;
     }
 
+    /**
+     * @en Attach the light to a render scene
+     * @zh 将光源挂载到渲染场景上
+     * @param scene @en The render scene @zh 渲染场景
+     */
     public attachToScene (scene: RenderScene) {
         this._scene = scene;
     }
 
+    /**
+     * @en Detach the light from the render scene
+     * @zh 将光源从渲染场景上移除
+     */
     public detachFromScene () {
         this._scene = null;
     }
@@ -210,7 +216,6 @@ export class Light {
     public destroy () {
         this._name = null;
         this._node = null;
-        this._destroy();
     }
 
     public update () {}

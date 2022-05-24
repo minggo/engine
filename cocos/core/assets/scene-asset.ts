@@ -24,11 +24,6 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module asset
- */
-
 import { ccclass, editable, serializable } from 'cc.decorator';
 import { Scene } from '../scene-graph';
 import { Asset } from './asset';
@@ -40,7 +35,7 @@ import { legacyCC } from '../global-exports';
  *
  */
 @ccclass('cc.SceneAsset')
-export default class SceneAsset extends Asset {
+export class SceneAsset extends Asset {
     /**
      * @en The scene node
      * @zh 场景节点。

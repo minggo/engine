@@ -27,7 +27,6 @@
 
 #include "../RenderFlow.h"
 #include "scene/Define.h"
-#include "scene/Light.h"
 
 namespace cc {
 namespace pipeline {
@@ -35,7 +34,7 @@ class ForwardPipeline;
 
 class CC_DLL ShadowFlow : public RenderFlow {
 public:
-    ShadowFlow() = default;
+    ShadowFlow();
     ~ShadowFlow() override;
 
     static const RenderFlowInfo &getInitializeInfo();
@@ -53,7 +52,7 @@ private:
 
     void clearShadowMap(scene::Camera *camera);
 
-    void resizeShadowMap(scene::Shadow **shadowInfo);
+    void resizeShadowMap();
 
     void initShadowFrameBuffer(RenderPipeline *pipeline, const scene::Light *light);
 
@@ -61,10 +60,10 @@ private:
 
     gfx::RenderPass *_renderPass = nullptr;
 
-    vector<const scene::Light *> _validLights;
-    vector<gfx::Texture *>       _usedTextures;
+    ccstd::vector<const scene::Light *> _validLights;
+    ccstd::vector<gfx::Texture *> _usedTextures;
 
-    static std::unordered_map<size_t, cc::gfx::RenderPass *> renderPassHashMap;
+    static ccstd::unordered_map<size_t, cc::gfx::RenderPass *> renderPassHashMap;
 };
 } // namespace pipeline
 } // namespace cc

@@ -23,8 +23,6 @@
  THE SOFTWARE.
  */
 
-
-
 import { AABB, Frustum, intersect, Sphere } from '../geometry';
 import { Model } from '../renderer/scene/model';
 import { Camera, SKYBOX_FLAG } from '../renderer/scene/camera';
@@ -41,8 +39,6 @@ const _vec3_p = new Vec3();
 const _shadowPos = new Vec3();
 const _mat4_trans = new Mat4();
 const _castLightViewBounds = new AABB();
-const _castWorldBounds = new AABB();
-let _castBoundsInited = false;
 const _sphere = Sphere.create(0, 0, 0, 1);
 const _cameraBoundingSphere = new Sphere();
 const _validFrustum = new Frustum();
@@ -62,7 +58,6 @@ const _texelSize = new Vec2();
 const _projSnap = new Vec3();
 const _snap = new Vec3();
 const _focus = new Vec3(0, 0, 0);
-const _ab = new AABB();
 
 const roPool = new Pool<IRenderObject>(() => ({ model: null!, depth: 0 }), 128);
 const dirShadowPool = new Pool<IRenderObject>(() => ({ model: null!, depth: 0 }), 128);
@@ -361,8 +356,6 @@ export function sceneCulling (pipeline: RenderPipeline, camera: Camera) {
 
     const castShadowObjects = sceneData.castShadowObjects;
     castShadowPool.freeArray(castShadowObjects); castShadowObjects.length = 0;
-    _castBoundsInited = false;
-
     let dirShadowObjects: IRenderObject[] | null = null;
     if (shadows.enabled) {
         pipeline.pipelineUBO.updateShadowUBORange(UBOShadow.SHADOW_COLOR_OFFSET, shadows.shadowColor);
@@ -402,14 +395,6 @@ export function sceneCulling (pipeline: RenderPipeline, camera: Camera) {
         if (model.enabled) {
             if (model.castShadow) {
                 castShadowObjects.push(getCastShadowRenderObject(model, camera));
-            }
-
-            if (shadows.firstSetCSM && model.worldBounds) {
-                if (!_castBoundsInited) {
-                    _castWorldBounds.copy(model.worldBounds);
-                    _castBoundsInited = true;
-                }
-                AABB.merge(_castWorldBounds, _castWorldBounds, model.worldBounds);
             }
 
             if (model.node && ((visibility & model.node.layer) === model.node.layer)

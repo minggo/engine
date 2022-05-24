@@ -25,9 +25,7 @@
 
 #pragma once
 
-#include <vector>
-#include "renderer/gfx-base/GFXDescriptorSet.h"
-#include "renderer/gfx-base/GFXInputAssembler.h"
+#include "renderer/gfx-base/GFXDef-common.h"
 
 namespace cc {
 namespace scene {
@@ -35,11 +33,11 @@ namespace scene {
 class Pass;
 
 struct DrawBatch2D final {
-    uint32_t                   visFlags{0};
-    gfx::DescriptorSet *       descriptorSet{nullptr};
-    gfx::InputAssembler *      inputAssembler{nullptr};
-    std::vector<Pass *>        passes;
-    std::vector<gfx::Shader *> shaders;
+    uint32_t visFlags{0};
+    gfx::DescriptorSet *descriptorSet{nullptr};
+    gfx::InputAssembler *inputAssembler{nullptr};
+    ccstd::vector<Pass *> passes;
+    ccstd::vector<gfx::Shader *> shaders;
 };
 
 } // namespace scene

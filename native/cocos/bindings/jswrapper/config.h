@@ -27,10 +27,8 @@
 #pragma once
 
 #define SCRIPT_ENGINE_NONE 0
-//#define SCRIPT_ENGINE_SM             1
-#define SCRIPT_ENGINE_V8  2
-#define SCRIPT_ENGINE_JSC 3
-//#define SCRIPT_ENGINE_CHAKRACORE     4
+#define SCRIPT_ENGINE_SM   1
+#define SCRIPT_ENGINE_V8   2
 
 #ifndef SCRIPT_ENGINE_TYPE
     #define SCRIPT_ENGINE_TYPE SCRIPT_ENGINE_V8
@@ -131,3 +129,11 @@ typedef SSIZE_T ssize_t;
 #else
     #define SE_DEPRECATED_ATTRIBUTE
 #endif // SE_DEPRECATED_ATTRIBUTE
+
+#if defined(__GNUC__) && __GNUC__ >= 4
+    #define SE_LIKELY(x)   (__builtin_expect((x), 1))
+    #define SE_UNLIKELY(x) (__builtin_expect((x), 0))
+#else
+    #define SE_LIKELY(x)   (x)
+    #define SE_UNLIKELY(x) (x)
+#endif

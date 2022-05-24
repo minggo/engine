@@ -35,19 +35,19 @@ BufferPool::BufferPool(PoolType type, uint entryBits, uint bytesPerEntry)
   _bytesPerEntry(bytesPerEntry),
   _type(type) {
     _entriesPerChunk = 1 << entryBits;
-    _entryMask       = _entriesPerChunk - 1;
-    _chunkMask       = 0xffffffff & ~(_entryMask | POOL_FLAG);
+    _entryMask = _entriesPerChunk - 1;
+    _chunkMask = 0xffffffff & ~(_entryMask | POOL_FLAG);
 
     _bytesPerChunk = _bytesPerEntry * _entriesPerChunk;
 }
 
 BufferPool::~BufferPool() = default;
 
-Object *BufferPool::allocateNewChunk() {
-    Object *jsObj = _allocator.alloc(static_cast<uint>(_chunks.size()), _bytesPerChunk);
+se::Object *BufferPool::allocateNewChunk() {
+    se::Object *jsObj = _allocator.alloc(static_cast<uint>(_chunks.size()), _bytesPerChunk);
 
     uint8_t *realPtr = nullptr;
-    size_t   len     = 0;
+    size_t len = 0;
     jsObj->getArrayBufferData(&realPtr, &len);
     _chunks.push_back(realPtr);
 

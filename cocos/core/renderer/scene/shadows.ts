@@ -23,7 +23,6 @@
  THE SOFTWARE.
  */
 
-import { JSB } from 'internal:constants';
 import { Material } from '../../assets/material';
 import { Sphere } from '../../geometry';
 import { Color, Mat4, Vec3, Vec2 } from '../../math';
@@ -31,7 +30,6 @@ import { legacyCC } from '../../global-exports';
 import { Enum } from '../../value-types';
 import type { ShadowsInfo } from '../../scene-graph/scene-globals';
 import { IMacroPatch } from '../core/pass';
-import { NativeShadow } from '../native-scene';
 import { Shader } from '../../gfx';
 
 /**
@@ -124,6 +122,10 @@ export const PCFType = Enum({
 
 const SHADOW_TYPE_NONE = ShadowType.ShadowMap + 1;
 
+/**
+ * @en The global shadow's configuration of the render scene
+ * @zh 渲染场景的全局阴影配置
+ */
 export class Shadows {
     /**
      * @en MAX_FAR. This is shadow camera max far.
@@ -146,7 +148,7 @@ export class Shadows {
     }
 
     set enabled (val: boolean) {
-        this._setEnable(val);
+        this._enabled = val;
         this.activate();
     }
 
@@ -158,7 +160,7 @@ export class Shadows {
         return this._type;
     }
     set type (val: number) {
-        this._setType(val);
+        this._type = this.enabled ? val : SHADOW_TYPE_NONE;
         this.activate();
     }
 
@@ -172,9 +174,6 @@ export class Shadows {
 
     set normal (val: Vec3) {
         Vec3.copy(this._normal, val);
-        if (JSB) {
-            this._nativeObj!.normal = this._normal;
-        }
     }
 
     /**
@@ -187,9 +186,6 @@ export class Shadows {
 
     set distance (val: number) {
         this._distance = val;
-        if (JSB) {
-            this._nativeObj!.distance = val;
-        }
     }
 
     /**
@@ -202,9 +198,6 @@ export class Shadows {
 
     set shadowColor (color: Color) {
         this._shadowColor = color;
-        if (JSB) {
-            this._nativeObj!.color = color;
-        }
     }
 
     /**
@@ -216,9 +209,6 @@ export class Shadows {
     }
     public set size (val: Vec2) {
         this._size.set(val);
-        if (JSB) {
-            this._nativeObj!.size = val;
-        }
     }
 
     /**
@@ -230,11 +220,12 @@ export class Shadows {
     }
     public set shadowMapDirty (val: boolean) {
         this._shadowMapDirty = val;
-        if (JSB) {
-            this._nativeObj!.shadowMapDirty = val;
-        }
     }
 
+    /**
+     * @en The transform matrix of the light source
+     * @zh 光源的变换矩阵
+     */
     public get matLight () {
         return this._matLight;
     }
@@ -260,12 +251,34 @@ export class Shadows {
     public maxReceived = 4;
 
     // local set
-    public firstSetCSM = false;
+    /**
+     * @internal
+     */
+    /**
+     * @en The far clip plane of the shadow camera
+     * @zh 阴影相机的远裁剪平面
+     */
     public shadowCameraFar = 0;
+    /**
+     * @en Shadow camera's view matrix
+     * @zh 阴影相机的视图矩阵
+     */
     public matShadowView = new Mat4();
+    /**
+     * @en Shadow camera's projection matrix
+     * @zh 阴影相机的投影矩阵
+     */
     public matShadowProj = new Mat4();
+    /**
+     * @en Shadow camera's view projection matrix
+     * @zh 阴影相机的视图投影矩阵
+     */
     public matShadowViewProj = new Mat4();
+    protected _matLight = new Mat4();
+    protected _material: Material | null = null;
+    protected _instancingMaterial: Material | null = null;
 
+    // public properties of shadow
     protected _enabled = false;
     protected _type = SHADOW_TYPE_NONE;
     protected _distance = 0;
@@ -274,64 +287,39 @@ export class Shadows {
     protected _size: Vec2 = new Vec2(512, 512);
     protected _shadowMapDirty = false;
 
-    protected _matLight = new Mat4();
-    protected _material: Material | null = null;
-    protected _instancingMaterial: Material | null = null;
-
-    protected declare _nativeObj: NativeShadow | null;
-
-    get native (): NativeShadow {
-        return this._nativeObj!;
-    }
-
-    constructor () {
-        if (JSB) {
-            this._nativeObj = new NativeShadow();
-        }
-    }
-
+    /**
+     * @en Get the shader for the planar shadow with macro patches
+     * @zh 通过指定宏获取平面阴影的 Shader 对象
+     * @param patches The macro patches for the shader
+     * @returns The shader for the planar shadow
+     */
     public getPlanarShader (patches: IMacroPatch[] | null): Shader | null {
         if (!this._material) {
             this._material = new Material();
             this._material.initialize({ effectName: 'planar-shadow' });
-            if (JSB) {
-                this._nativeObj!.planarPass = this._material.passes[0].native;
-            }
         }
 
         return this._material.passes[0].getShaderVariant(patches);
     }
 
+    /**
+     * @en Get the shader which support instancing draw for the planar shadow with macro patches
+     * @zh 通过指定宏获取支持实例化渲染的平面阴影的 Shader 对象
+     * @param patches The macro patches for the shader
+     * @returns The shader for the planar shadow
+     */
     public getPlanarInstanceShader (patches: IMacroPatch[] | null): Shader | null {
         if (!this._instancingMaterial) {
             this._instancingMaterial = new Material();
             this._instancingMaterial.initialize({ effectName: 'planar-shadow', defines: { USE_INSTANCING: true } });
-            if (JSB) {
-                this._nativeObj!.instancePass = this._instancingMaterial.passes[0].native;
-            }
         }
 
         return this._instancingMaterial.passes[0].getShaderVariant(patches);
     }
 
-    private _setEnable (val: boolean) {
-        this._enabled = val;
-        if (JSB) {
-            this._nativeObj!.enabled = val;
-            if (!val) this._setType(SHADOW_TYPE_NONE);
-        }
-    }
-
-    private _setType (val) {
-        this._type = this.enabled ? val : SHADOW_TYPE_NONE;
-        if (JSB) {
-            this._nativeObj!.shadowType = this._type;
-        }
-    }
-
     public initialize (shadowsInfo: ShadowsInfo) {
-        this._setEnable(shadowsInfo.enabled);
-        this._setType(shadowsInfo.type);
+        this._enabled = shadowsInfo.enabled;
+        this._type = this.enabled ? shadowsInfo.type : SHADOW_TYPE_NONE;
 
         this.normal = shadowsInfo.planeDirection;
         this.distance = shadowsInfo.planeHeight;
@@ -352,27 +340,14 @@ export class Shadows {
         if (!this._material) {
             this._material = new Material();
             this._material.initialize({ effectName: 'planar-shadow' });
-            if (JSB) {
-                this._nativeObj!.planarPass = this._material.passes[0].native;
-            }
         }
         if (!this._instancingMaterial) {
             this._instancingMaterial = new Material();
             this._instancingMaterial.initialize({ effectName: 'planar-shadow', defines: { USE_INSTANCING: true } });
-            if (JSB) {
-                this._nativeObj!.instancePass = this._instancingMaterial.passes[0].native;
-            }
-        }
-    }
-
-    protected _destroy () {
-        if (JSB) {
-            this._nativeObj = null;
         }
     }
 
     public destroy () {
-        this._destroy();
         if (this._material) {
             this._material.destroy();
         }

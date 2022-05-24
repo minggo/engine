@@ -23,17 +23,10 @@
  THE SOFTWARE.
  */
 
-/**
- * @packageDocumentation
- * @module core
- */
-
-import { JSB } from 'internal:constants';
 import { builtinResMgr } from './builtin';
 import { Pool } from './memop';
 import { RenderPipeline, createDefaultPipeline, DeferredPipeline } from './pipeline';
 import { Camera, Light, Model } from './renderer/scene';
-import { NativeRoot } from './renderer/native-scene';
 import type { DataPoolManager } from '../3d/skeletal-animation/data-pool-manager';
 import { LightType } from './renderer/scene/light';
 import { IRenderSceneInfo, RenderScene } from './renderer/core/render-scene';
@@ -43,7 +36,10 @@ import { legacyCC } from './global-exports';
 import { RenderWindow, IRenderWindowInfo } from './renderer/core/render-window';
 import { ColorAttachment, DepthStencilAttachment, RenderPassInfo, StoreOp, Device, Swapchain, Feature } from './gfx';
 import { warnID } from './platform/debug';
+import { Pipeline, PipelineRuntime } from './pipeline/custom/pipeline';
+import { createCustomPipeline } from './pipeline/custom';
 import { Batcher2D } from '../2d/renderer/batcher-2d';
+import { IPipelineEvent } from './pipeline/pipeline-event';
 
 /**
  * @zh
@@ -66,32 +62,6 @@ export interface ISceneInfo {
  * Root类
  */
 export class Root {
-    private _init (): void {
-        if (JSB) {
-            this._naitveObj = new NativeRoot();
-        }
-    }
-
-    private _destroy (): void {
-        if (JSB) {
-            this._naitveObj = null;
-        }
-    }
-
-    private _setCumulativeTime (deltaTime: number): void {
-        this._cumulativeTime += deltaTime;
-        if (JSB) {
-            this._naitveObj.cumulativeTime = this._cumulativeTime;
-        }
-    }
-
-    private _setFrameTime (deltaTime: number): void {
-        this._frameTime = deltaTime;
-        if (JSB) {
-            this._naitveObj.frameTime = deltaTime;
-        }
-    }
-
     /**
      * @zh
      * GFX 设备
@@ -142,10 +112,26 @@ export class Root {
 
     /**
      * @zh
+     * 启用自定义渲染管线
+     */
+    public get usesCustomPipeline (): boolean {
+        return this._usesCustomPipeline;
+    }
+
+    /**
+     * @zh
      * 渲染管线
      */
-    public get pipeline (): RenderPipeline {
+    public get pipeline (): PipelineRuntime {
         return this._pipeline!;
+    }
+
+    /**
+     * @zh
+     * 渲染管线事件
+     */
+    public get pipelineEvent (): IPipelineEvent {
+        return this._pipelineEvent!;
     }
 
     /**
@@ -236,7 +222,11 @@ export class Root {
     private _mainWindow: RenderWindow | null = null;
     private _curWindow: RenderWindow | null = null;
     private _tempWindow: RenderWindow | null = null;
-    private _pipeline: RenderPipeline | null = null;
+    private _usesCustomPipeline = false;
+    private _pipeline: PipelineRuntime | null = null;
+    private _pipelineEvent: IPipelineEvent | null = null;
+    private _classicPipeline: RenderPipeline | null = null;
+    private _customPipeline: Pipeline | null = null;
     private _batcher: Batcher2D | null = null;
     private _dataPoolMgr: DataPoolManager;
     private _scenes: RenderScene[] = [];
@@ -272,11 +262,8 @@ export class Root {
      * 初始化函数
      * @param info Root描述信息
      */
-    public initialize (info: IRootInfo): Promise<void> {
-        this._init();
-
+    public initialize (info: IRootInfo) {
         const swapchain: Swapchain = legacyCC.game._swapchain;
-
         const colorAttachment = new ColorAttachment();
         colorAttachment.format = swapchain.colorTexture.format;
         const depthStencilAttachment = new DepthStencilAttachment();
@@ -293,8 +280,6 @@ export class Root {
             swapchain,
         });
         this._curWindow = this._mainWindow;
-
-        return Promise.resolve(builtinResMgr.initBuiltinRes(this._device));
     }
 
     public destroy () {
@@ -303,6 +288,7 @@ export class Root {
         if (this._pipeline) {
             this._pipeline.destroy();
             this._pipeline = null;
+            this._pipelineEvent = null;
         }
 
         if (this._batcher) {
@@ -313,8 +299,6 @@ export class Root {
         this._curWindow = null;
         this._mainWindow = null;
         this.dataPoolManager.clear();
-
-        this._destroy();
     }
 
     /**
@@ -332,6 +316,9 @@ export class Root {
     }
 
     public setRenderPipeline (rppl: RenderPipeline): boolean {
+        //-----------------------------------------------
+        // prepare classic pipeline
+        //-----------------------------------------------
         if (rppl instanceof DeferredPipeline) {
             this._useDeferredPipeline = true;
         }
@@ -341,23 +328,42 @@ export class Root {
             rppl = createDefaultPipeline();
             isCreateDefaultPipeline = true;
         }
-        this._pipeline = rppl;
+
         // now cluster just enabled in deferred pipeline
         if (!this._useDeferredPipeline || !this.device.hasFeature(Feature.COMPUTE_SHADER)) {
             // disable cluster
-            this._pipeline.clusterEnabled = false;
+            rppl.clusterEnabled = false;
         }
-        this._pipeline.bloomEnabled = false;
+        rppl.bloomEnabled = false;
+
+        //-----------------------------------------------
+        // choose pipeline
+        //-----------------------------------------------
+        if (this.usesCustomPipeline) {
+            this._customPipeline = createCustomPipeline();
+            isCreateDefaultPipeline = true;
+            this._pipeline = this._customPipeline!;
+        } else {
+            this._classicPipeline = rppl;
+            this._pipeline = this._classicPipeline;
+            this._pipelineEvent = this._classicPipeline;
+        }
 
         if (!this._pipeline.activate(this._mainWindow!.swapchain)) {
             if (isCreateDefaultPipeline) {
                 this._pipeline.destroy();
             }
+            this._classicPipeline = null;
+            this._customPipeline = null;
             this._pipeline = null;
+            this._pipelineEvent = null;
 
             return false;
         }
 
+        //-----------------------------------------------
+        // pipeline initialization completed
+        //-----------------------------------------------
         const scene = legacyCC.director.getScene();
         if (scene) {
             scene.globals.activate();
@@ -380,7 +386,7 @@ export class Root {
             this._scenes[i].onGlobalPipelineStateChanged();
         }
 
-        this._pipeline!.pipelineSceneData.onGlobalPipelineStateChanged();
+        this._pipeline!.onGlobalPipelineStateChanged();
     }
 
     /**
@@ -397,7 +403,7 @@ export class Root {
      * 重置累计时间
      */
     public resetCumulativeTime () {
-        this._setCumulativeTime(0);
+        this._cumulativeTime = 0;
     }
 
     /**
@@ -406,7 +412,7 @@ export class Root {
      * @param deltaTime 间隔时间
      */
     public frameMove (deltaTime: number) {
-        this._setFrameTime(deltaTime);
+        this._frameTime = deltaTime;
 
         /*
         if (this._fixedFPSFrameTime > 0) {
@@ -420,7 +426,7 @@ export class Root {
         */
 
         ++this._frameCount;
-        this._setCumulativeTime(deltaTime);
+        this._cumulativeTime += deltaTime;
         this._fpsTime += deltaTime;
         if (this._fpsTime > 1.0) {
             this._fps = this._frameCount;

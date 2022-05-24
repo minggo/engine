@@ -24,12 +24,13 @@
 ****************************************************************************/
 
 #include "physics/sdk/Shape.h"
+#include "base/memory/Memory.h"
 #include "physics/PhysicsSelector.h"
 
 #define CC_PHYSICS_SHAPE_DEFINITION(CLASS, WRAPPED)                  \
                                                                      \
     CLASS::CLASS() {                                                 \
-        _impl.reset(new WRAPPED());                                  \
+        _impl.reset(ccnew WRAPPED());                                \
     }                                                                \
                                                                      \
     CLASS::~CLASS() {                                                \
@@ -40,7 +41,7 @@
         return _impl->getImpl();                                     \
     }                                                                \
                                                                      \
-    void CLASS::initialize(scene::Node* node) {                      \
+    void CLASS::initialize(Node *node) {                             \
         _impl->initialize(node);                                     \
     }                                                                \
                                                                      \
@@ -89,11 +90,11 @@
         _impl->updateEventListener(v);                               \
     }                                                                \
                                                                      \
-    scene::AABB& CLASS::getAABB() {                                  \
+    geometry::AABB &CLASS::getAABB() {                               \
         return _impl->getAABB();                                     \
     }                                                                \
                                                                      \
-    scene::Sphere& CLASS::getBoundingSphere() {                      \
+    geometry::Sphere &CLASS::getBoundingSphere() {                   \
         return _impl->getBoundingSphere();                           \
     }
 

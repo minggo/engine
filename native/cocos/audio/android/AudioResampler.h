@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <sys/types.h>
 #include <android/log.h>
+#include <stdint.h>
 #include <sys/system_properties.h>
+#include <sys/types.h>
 
 #include "audio/android/AudioBufferProvider.h"
 
@@ -149,7 +149,7 @@ protected:
     //  phaseWrapLimit is the wraparound (1 << kNumPhaseBits), if not specified explicitly.
     //
     inline size_t getInFrameCountRequired(size_t outFrameCount) {
-        return (static_cast<uint64_t>(outFrameCount) * mInSampleRate + (mSampleRate - 1)) / mSampleRate;
+        return (static_cast<size_t>(outFrameCount) * mInSampleRate + (mSampleRate - 1)) / mSampleRate;
     }
 
     inline float clampFloatVol(float volume) {

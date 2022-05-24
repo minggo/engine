@@ -23,12 +23,8 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module scene-graph
- */
-
-import { Renderable2D } from '../../2d/framework/renderable-2d';
+import { JSB } from 'internal:constants';
+import { UIRenderer } from '../../2d/framework/ui-renderer';
 import { UITransform } from '../../2d/framework/ui-transform';
 import { warnID } from '../platform/debug';
 import { UIMeshRenderer } from '../../2d';
@@ -60,7 +56,7 @@ export class NodeUIProperties {
     get uiComp () {
         return this._uiComp;
     }
-    set uiComp (comp: UIMeshRenderer | Renderable2D | null) {
+    set uiComp (comp: UIMeshRenderer | UIRenderer | null) {
         if (this._uiComp && comp) {
             warnID(12002);
             return;
@@ -68,7 +64,7 @@ export class NodeUIProperties {
         this._uiComp = comp;
     }
 
-    private _uiComp: UIMeshRenderer | Renderable2D | null = null;
+    private _uiComp: UIMeshRenderer | UIRenderer | null = null;
 
     /**
      * @en The opacity of the UI node for final rendering
@@ -92,8 +88,26 @@ export class NodeUIProperties {
     protected _uiTransformComp: UITransform | null = null;
     private _node: any;
 
+    public declare uiTransformDirty: boolean;
+    private declare _uiTransformDirty: Uint32Array;
+
     constructor (node: any) {
         this._node = node;
+
+        if (JSB) {
+            this._uiTransformDirty = new Uint32Array((jsb as any).createExternalArrayBuffer(4));
+            Object.defineProperty(this, 'uiTransformDirty',
+                {
+                    get (): boolean {
+                        return this._uiTransformDirty[0] !== 0;
+                    },
+                    set (val: boolean) {
+                        this._uiTransformDirty[0] = val ? 1 : 0;
+                    },
+                });
+        } else {
+            this.uiTransformDirty = false;
+        }
     }
 
     /**

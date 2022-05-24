@@ -23,11 +23,6 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module ui-assembler
- */
-
 import { Color, Mat4, Vec3 } from '../../../core/math';
 import { IRenderData, RenderData } from '../../renderer/render-data';
 import { IBatcher } from '../../renderer/i-batcher';
@@ -242,8 +237,8 @@ export const barFilled: IAssembler = {
 
         const bid = chunk.bufferId;
         const vid = chunk.vertexOffset;
-        const meshBuffer = chunk.vertexAccessor.getMeshBuffer(chunk.bufferId);
-        const ib = chunk.vertexAccessor.getIndexBuffer(bid);
+        const meshBuffer = chunk.meshBuffer;
+        const ib = chunk.meshBuffer.iData;
         let indexOffset = meshBuffer.indexOffset;
         ib[indexOffset++] = vid;
         ib[indexOffset++] = vid + 1;

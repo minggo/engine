@@ -50,27 +50,8 @@ struct FontDefinition;
  */
 class CC_DLL Device {
 public:
-    // https://developer.mozilla.org/en-US/docs/Web/API/Window/orientation
-    enum class Orientation {
-        PORTRAIT             = 0,
-        LANDSCAPE_LEFT       = -90,
-        PORTRAIT_UPSIDE_DOWN = 180,
-        LANDSCAPE_RIGHT      = 90
-    };
-
-    struct MotionValue {
-        float accelerationX = 0.0F;
-        float accelerationY = 0.0F;
-        float accelerationZ = 0.0F;
-
-        float accelerationIncludingGravityX = 0.0F;
-        float accelerationIncludingGravityY = 0.0F;
-        float accelerationIncludingGravityZ = 0.0F;
-
-        float rotationRateAlpha = 0.0F;
-        float rotationRateBeta  = 0.0F;
-        float rotationRateGamma = 0.0F;
-    };
+    using Orientation = IScreen::Orientation;
+    using MotionValue = IAccelerometer::MotionValue;
 
     /**
      *  Gets the DPI of device
@@ -106,7 +87,7 @@ public:
     /**
      *  Gets device model information.
      */
-    static std::string getDeviceModel();
+    static ccstd::string getDeviceModel();
 
     /**
      * Controls whether the screen should remain on.
@@ -140,7 +121,7 @@ public:
 
 private:
     Device();
-    CC_DISABLE_COPY_AND_MOVE_SEMANTICS(Device)
+    CC_DISALLOW_COPY_MOVE_ASSIGN(Device)
 };
 
 // end group

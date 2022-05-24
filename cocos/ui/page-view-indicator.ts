@@ -24,11 +24,6 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module ui
- */
-
 import { ccclass, help, executionOrder, menu, tooltip, type, serializable } from 'cc.decorator';
 import { SpriteFrame } from '../2d/assets';
 import { Component } from '../core/components';
@@ -38,7 +33,7 @@ import { Node } from '../core/scene-graph';
 import { Layout } from './layout';
 import { PageView } from './page-view';
 import { Sprite } from '../2d/components/sprite';
-import { Renderable2D } from '../2d/framework/renderable-2d';
+import { UIRenderer } from '../2d/framework/ui-renderer';
 import { legacyCC } from '../core/global-exports';
 
 const _color = new Color();
@@ -229,14 +224,14 @@ export class PageViewIndicator extends Component {
                 continue;
             }
 
-            const uiComp = node._uiProps.uiComp as Renderable2D;
+            const uiComp = node._uiProps.uiComp as UIRenderer;
             _color.set(uiComp.color);
             _color.a = 255 / 2;
             uiComp.color = _color;
         }
 
         if (indicators[idx]._uiProps.uiComp) {
-            const comp = indicators[idx]._uiProps.uiComp as Renderable2D;
+            const comp = indicators[idx]._uiProps.uiComp as UIRenderer;
             _color.set(comp.color);
             _color.a = 255;
             comp.color = _color;

@@ -34,10 +34,11 @@
 #endif
 
 #include "audio/include/AudioEngine.h"
-#include "platform/FileUtils.h"
 #include "application/ApplicationManager.h"
 #include "base/Scheduler.h"
 #include "base/Utils.h"
+#include "base/memory/Memory.h"
+#include "platform/FileUtils.h"
 
 using namespace cc;
 
@@ -71,8 +72,6 @@ static ALenum alSourceAddNotificationExt(ALuint sid, ALuint notificationID, alSo
 
 @implementation AudioEngineSessionHandler
 
-    // only enable it on iOS. Disable it on tvOS
-    #if !defined(CC_TARGET_OS_TVOS)
 void AudioEngineInterruptionListenerCallback(void *user_data, UInt32 interruption_state) {
     if (kAudioSessionBeginInterruption == interruption_state) {
         alcMakeContextCurrent(nullptr);
@@ -83,7 +82,6 @@ void AudioEngineInterruptionListenerCallback(void *user_data, UInt32 interruptio
         alcMakeContextCurrent(s_ALContext);
     }
 }
-    #endif
 
 - (id)init {
     if (self = [super init]) {
@@ -92,16 +90,12 @@ void AudioEngineInterruptionListenerCallback(void *user_data, UInt32 interruptio
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:UIApplicationDidBecomeActiveNotification object:nil];
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:UIApplicationWillResignActiveNotification object:nil];
         }
-        // only enable it on iOS. Disable it on tvOS
-        // AudioSessionInitialize removed from tvOS
-    #if !defined(CC_TARGET_OS_TVOS)
         else {
             AudioSessionInitialize(NULL, NULL, AudioEngineInterruptionListenerCallback, self);
         }
-    #endif
 
         BOOL success = [[AVAudioSession sharedInstance]
-            setCategory:AVAudioSessionCategoryAmbient
+            setCategory:AVAudioSessionCategoryPlayback
                   error:nil];
         if (!success)
             ALOGE("Fail to set audio session.");
@@ -151,7 +145,7 @@ void AudioEngineInterruptionListenerCallback(void *user_data, UInt32 interruptio
             resumeOnBecomingActive = false;
             ALOGD("UIApplicationDidBecomeActiveNotification, alcMakeContextCurrent(s_ALContext)");
             NSError *error = nil;
-            BOOL success = [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:&error];
+            BOOL success = [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:&error];
             if (!success) {
                 ALOGE("Fail to set audio session.");
                 return;
@@ -159,7 +153,18 @@ void AudioEngineInterruptionListenerCallback(void *user_data, UInt32 interruptio
             [[AVAudioSession sharedInstance] setActive:YES error:&error];
             alcMakeContextCurrent(s_ALContext);
         } else if (isAudioSessionInterrupted) {
-            ALOGD("Audio session is still interrupted, pause director!");
+            isAudioSessionInterrupted = false;
+            ALOGD("UIApplicationDidBecomeActiveNotification, alcMakeContextCurrent(s_ALContext)");
+            NSError *error = nil;
+            BOOL success = [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:&error];
+            if (!success) {
+                ALOGE("Fail to set audio session.");
+                return;
+            }
+            [[AVAudioSession sharedInstance] setActive:YES error:&error];
+            alcMakeContextCurrent(s_ALContext);
+
+            // ALOGD("Audio session is still interrupted, pause director!");
             //IDEA: Director::getInstance()->pause();
         }
     }
@@ -258,14 +263,14 @@ bool AudioEngineImpl::init() {
             {
                 if (gOALBufferMap == NULL) // Position 1
                 {
-                    gOALBufferMap = new OALBufferMap ();  // Position 2
+                    gOALBufferMap = ccnew OALBufferMap ();  // Position 2
 
                     // Position Gap
 
-                    gBufferMapLock = new CAGuard("OAL:BufferMapLock"); // Position 3
-                    gDeadOALBufferMap = new OALBufferMap ();
+                    gBufferMapLock = ccnew CAGuard("OAL:BufferMapLock"); // Position 3
+                    gDeadOALBufferMap = ccnew OALBufferMap ();
 
-                    OALBuffer   *newBuffer = new OALBuffer (AL_NONE);
+                    OALBuffer   *newBuffer = ccnew OALBuffer (AL_NONE);
                     gOALBufferMap->Add(AL_NONE, &newBuffer);
                 }
             }
@@ -316,7 +321,7 @@ bool AudioEngineImpl::init() {
     return ret;
 }
 
-AudioCache *AudioEngineImpl::preload(const std::string &filePath, std::function<void(bool)> callback) {
+AudioCache *AudioEngineImpl::preload(const ccstd::string &filePath, std::function<void(bool)> callback) {
     AudioCache *audioCache = nullptr;
 
     auto it = _audioCaches.find(filePath);
@@ -343,7 +348,7 @@ AudioCache *AudioEngineImpl::preload(const std::string &filePath, std::function<
     return audioCache;
 }
 
-int AudioEngineImpl::play2d(const std::string &filePath, bool loop, float volume) {
+int AudioEngineImpl::play2d(const ccstd::string &filePath, bool loop, float volume) {
     if (s_ALDevice == nullptr) {
         return AudioEngine::INVALID_AUDIO_ID;
     }
@@ -353,7 +358,7 @@ int AudioEngineImpl::play2d(const std::string &filePath, bool loop, float volume
         return AudioEngine::INVALID_AUDIO_ID;
     }
 
-    auto player = new (std::nothrow) AudioPlayer;
+    auto *player = ccnew AudioPlayer;
     if (player == nullptr) {
         return AudioEngine::INVALID_AUDIO_ID;
     }
@@ -390,14 +395,10 @@ void AudioEngineImpl::play2dImpl(AudioCache *cache, int audioID) {
     if (!*cache->_isDestroyed && cache->_state == AudioCache::State::READY) {
         _threadMutex.lock();
         auto playerIt = _audioPlayers.find(audioID);
-        if (playerIt != _audioPlayers.end() && playerIt->second->play2d()) {
-            if (auto sche = _scheduler.lock()) {
-                sche->performFunctionInCocosThread([audioID]() {
-                    if (AudioEngine::sAudioIDInfoMap.find(audioID) != AudioEngine::sAudioIDInfoMap.end()) {
-                        AudioEngine::sAudioIDInfoMap[audioID].state = AudioEngine::AudioState::PLAYING;
-                    }
-                });
-            }
+        if (playerIt != _audioPlayers.end()) {
+            // Trust it, or assert it out.
+            bool res = playerIt->second->play2d();
+            CC_ASSERT(res);
         }
         _threadMutex.unlock();
     } else {
@@ -526,7 +527,7 @@ float AudioEngineImpl::getDuration(int audioID) {
     }
 }
 
-float AudioEngineImpl::getDurationFromFile(const std::string &filePath) {
+float AudioEngineImpl::getDurationFromFile(const ccstd::string &filePath) {
     auto it = _audioCaches.find(filePath);
     if (it == _audioCaches.end()) {
         this->preload(filePath, nullptr);
@@ -593,7 +594,7 @@ bool AudioEngineImpl::setCurrentTime(int audioID, float time) {
     return ret;
 }
 
-void AudioEngineImpl::setFinishCallback(int audioID, const std::function<void(int, const std::string &)> &callback) {
+void AudioEngineImpl::setFinishCallback(int audioID, const std::function<void(int, const ccstd::string &)> &callback) {
     if (!checkAudioIdValid(audioID)) {
         return;
     }
@@ -622,8 +623,7 @@ void AudioEngineImpl::update(float dt) {
             delete player;
             _unusedSourcesPool.push_back(alSource);
         } else if (player->_ready && sourceState == AL_STOPPED) {
-
-            std::string filePath;
+            ccstd::string filePath;
             if (player->_finishCallbak) {
                 auto &audioInfo = AudioEngine::sAudioIDInfoMap[audioID];
                 filePath = *audioInfo.filePath;
@@ -658,7 +658,7 @@ void AudioEngineImpl::update(float dt) {
     }
 }
 
-void AudioEngineImpl::uncache(const std::string &filePath) {
+void AudioEngineImpl::uncache(const ccstd::string &filePath) {
     _audioCaches.erase(filePath);
 }
 

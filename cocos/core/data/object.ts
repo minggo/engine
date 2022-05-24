@@ -23,17 +23,13 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module core/data
- */
-
-import { SUPPORT_JIT, EDITOR, TEST } from 'internal:constants';
+import { SUPPORT_JIT, EDITOR, TEST, JSB } from 'internal:constants';
 import * as js from '../utils/js';
 import { CCClass } from './class';
 import { errorID, warnID } from '../platform/debug';
 import { legacyCC } from '../global-exports';
 import { EditorExtendableObject, editorExtrasTag } from './editor-extras-tag';
+import { copyAllProperties } from '../utils/js';
 
 // definitions for CCObject.Flags
 
@@ -195,12 +191,12 @@ class CCObject implements EditorExtendableObject {
     }
 
     /**
-     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * @internal
      */
     public declare [editorExtrasTag]: unknown;
 
     /**
-     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * @internal
      */
     public _objFlags: number;
     protected _name: string;
@@ -320,16 +316,30 @@ class CCObject implements EditorExtendableObject {
         if (EDITOR && deferredDestroyTimer === null && legacyCC.engine && !legacyCC.engine._isUpdating) {
             // auto destroy immediate in edit mode
             // @ts-expect-error no function
-            deferredDestroyTimer = setImmediate(CCObject._deferredDestroy);
+            deferredDestroyTimer = setTimeout(CCObject._deferredDestroy);
         }
+
+        if (JSB) {
+            // @ts-expect-error JSB method
+            this._destroy();
+        }
+
         return true;
     }
 
     /**
+     * @en
      * Clear all references in the instance.
      *
      * NOTE: this method will not clear the getter or setter functions which defined in the instance of CCObject.
-     *       You can override the _destruct method if you need, for example:
+     *
+     * @zh
+     * 清理实例的所有引用
+     * 注意：此方法不会清理实例上的 getter 与 setter 方法。
+     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * @example
+     * ```
+     * // You can override the _destruct method if you need, for example:
      *       _destruct: function () {
      *           for (var key in this) {
      *               if (this.hasOwnProperty(key)) {
@@ -344,8 +354,7 @@ class CCObject implements EditorExtendableObject {
      *               }
      *           }
      *       }
-     *
-     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * ```
      */
     public _destruct () {
         const ctor: any = this.constructor;
@@ -619,6 +628,21 @@ declare namespace CCObject {
 
 /*
  * @en
+ * Checks whether the object is a CCObject.<br>
+ *
+ * @zh
+ * 检查该对象是否为CCObject。<br>
+ *
+ * @method isCCObject
+ * @param object
+ * @return @en Whether it is a CCObject boolean value. @zh 是否为CCObject的布尔值。
+ */
+export function isCCObject (object: any) {
+    return object instanceof CCObject;
+}
+
+/*
+ * @en
  * Checks whether the object is non-nil and not yet destroyed.<br>
  * When an object's `destroy` is called, it is actually destroyed after the end of this frame.
  * So `isValid` will return false from the next frame, while `isValid` in the current frame will still be true.
@@ -661,6 +685,18 @@ if (EDITOR || TEST) {
         obj._objFlags &= ~ToDestroy;
         js.array.fastRemove(objectsToDestroy, obj);
     });
+}
+
+declare const jsb: any;
+
+if (JSB) {
+    copyAllProperties(CCObject, jsb.CCObject, ['prototype', 'length', 'name']);
+    copyAllProperties(CCObject.prototype, jsb.CCObject.prototype,
+        ['constructor', 'name', 'hideFlags', 'replicated', 'isValid']);
+
+    // @ts-expect-error TS2629
+    // eslint-disable-next-line no-class-assign
+    CCObject = jsb.CCObject;
 }
 
 legacyCC.Object = CCObject;

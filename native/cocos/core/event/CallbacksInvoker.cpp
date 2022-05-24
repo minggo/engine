@@ -27,31 +27,23 @@
 
 namespace cc {
 
-// NOTE: CCObject is not defined in engine 3.5, so make a fake one.
-bool isObjectValid(CCObject *value, bool strictMode/* = false*/) {
-    CC_UNUSED_PARAM(value);
-    CC_UNUSED_PARAM(strictMode);
-    return true;
-}
-//
-
 CallbackInfoBase::ID CallbacksInvoker::cbIDCounter{0};
 
 void CallbackList::removeByCallbackID(CallbackInfoBase::ID cbID) {
-    for (size_t i = 0; i < _callbackInfos.size(); ++i) {
+    for (int32_t i = 0; i < _callbackInfos.size(); ++i) {
         auto &info = _callbackInfos[i];
         if (info->_id == cbID) {
-            utils::array::fastRemoveAt(_callbackInfos, static_cast<int32_t>(i));
+            utils::array::fastRemoveAt(_callbackInfos, i);
             --i;
         }
     }
 }
 
 void CallbackList::removeByTarget(void *target) {
-    for (size_t i = 0; i < _callbackInfos.size(); ++i) {
+    for (int32_t i = 0; i < _callbackInfos.size(); ++i) {
         auto &info = _callbackInfos[i];
         if (info->_target == target) {
-            utils::array::fastRemoveAt(_callbackInfos, static_cast<int32_t>(i));
+            utils::array::fastRemoveAt(_callbackInfos, i);
             --i;
         }
     }
@@ -59,7 +51,7 @@ void CallbackList::removeByTarget(void *target) {
 
 void CallbackList::cancel(index_t index) {
     std::shared_ptr<CallbackInfoBase> *info = nullptr;
-    if (index >= 0 && static_cast<size_t>(index) < _callbackInfos.size()) {
+    if (index >= 0 && index < _callbackInfos.size()) {
         info = &_callbackInfos[index];
     }
 
@@ -93,7 +85,7 @@ void CallbackList::purgeCanceled() {
 void CallbackList::clear() {
     cancelAll();
     _callbackInfos.clear();
-    _isInvoking      = false;
+    _isInvoking = false;
     _containCanceled = false;
 }
 
@@ -191,7 +183,7 @@ void CallbacksInvoker::offAll(const KeyType &key) {
 
 void CallbacksInvoker::offAll(void *target) {
     for (auto &e : _callbackTable) {
-        auto &      list  = e.second;
+        auto &list = e.second;
         const auto &infos = list._callbackInfos;
         if (list._isInvoking) {
             index_t i = 0;
@@ -223,9 +215,9 @@ void CallbacksInvoker::offAll() {
 void CallbacksInvoker::off(const KeyType &key, CallbackInfoBase::ID cbID) {
     auto iter = _callbackTable.find(key);
     if (iter != _callbackTable.end()) {
-        auto &      list  = iter->second;
+        auto &list = iter->second;
         const auto &infos = list._callbackInfos;
-        index_t     i     = 0;
+        index_t i = 0;
         for (const auto &info : infos) {
             if (info != nullptr && info->_id == cbID) {
                 list.cancel(i);
@@ -239,9 +231,9 @@ void CallbacksInvoker::off(const KeyType &key, CallbackInfoBase::ID cbID) {
 void CallbacksInvoker::offAll(const KeyType &key, void *target) {
     auto iter = _callbackTable.find(key);
     if (iter != _callbackTable.end()) {
-        auto &      list  = iter->second;
+        auto &list = iter->second;
         const auto &infos = list._callbackInfos;
-        index_t     i     = 0;
+        index_t i = 0;
         if (list._isInvoking) {
             for (const auto &info : infos) {
                 if (info != nullptr && info->_target == target) {
@@ -257,9 +249,9 @@ void CallbacksInvoker::offAll(const KeyType &key, void *target) {
 
 void CallbacksInvoker::off(CallbackInfoBase::ID cbID) {
     for (auto &cbInfo : _callbackTable) {
-        auto &      list  = cbInfo.second;
+        auto &list = cbInfo.second;
         const auto &infos = list._callbackInfos;
-        index_t     i     = 0;
+        index_t i = 0;
         for (const auto &info : infos) {
             if (info != nullptr && info->_id == cbID) {
                 list.cancel(i);

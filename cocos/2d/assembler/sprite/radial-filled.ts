@@ -23,11 +23,6 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module ui-assembler
- */
-
 import { SpriteFrame } from '../../assets';
 import { Color, Mat4, Vec2, Vec3 } from '../../../core/math';
 import { IRenderData, RenderData } from '../../renderer/render-data';
@@ -365,8 +360,8 @@ export const radialFilled: IAssembler = {
 
         const bid = chunk.bufferId;
         const vid = chunk.vertexOffset;
-        const meshBuffer = chunk.vertexAccessor.getMeshBuffer(chunk.bufferId);
-        const ib = chunk.vertexAccessor.getIndexBuffer(bid);
+        const meshBuffer = chunk.meshBuffer;
+        const ib = chunk.meshBuffer.iData;
         const indexOffset = meshBuffer.indexOffset;
         for (let i = 0; i < renderData.indexCount; i++) {
             ib[indexOffset + i] = vid + i;

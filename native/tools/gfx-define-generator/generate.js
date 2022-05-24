@@ -40,6 +40,16 @@ const ignoreList = { PipelineStateInfo: true, BlendTarget: true, BlendState: tru
 let header = fs.readFileSync(ps.join(__dirname, '/../../cocos/renderer/gfx-base/GFXDef-common.h')).toString();
 header = header.replace(/\r\n/g, '\n');
 
+
+// save & strip block comments
+const blockComments = [];
+const blockCommentsRE = /(\/\*\*.*?\*\/)\s*(.+?\n)/gs;
+header = header.replace(blockCommentsRE, (_, comments, succeeding) => {
+    blockComments.push({ succeeding, source: comments });
+    return succeeding;
+});
+
+// enum
 const enumRE = /enum\s+class\s+(\w+).*?{\s*?\n(.+?)};/gs;
 const enumValueRE = /(\w+).*?(?:=\s*(.*?))?,/g;
 const enumMap = {};
@@ -47,6 +57,7 @@ let enumCap = enumRE.exec(header);
 while (enumCap) {
     const e = enumMap[enumCap[1]] = {};
     e.keys = {};
+    e.comments = blockComments.find((c) => enumCap[0].startsWith(c.succeeding))?.source;
 
     if (options.nonVerbatimCopy) {
         let values = enumCap[2].replace(/\s*\/\/.*$/gm, '');
@@ -72,13 +83,6 @@ while (enumCap) {
     enumCap = enumRE.exec(header);
 }
 
-// save & strip block comments
-const blockComments = [];
-const blockCommentsRE = /(\/\*\*.*?\*\/)\s*(.+?\n)/gs;
-header = header.replace(blockCommentsRE, (_, comments, succeeding) => {
-    blockComments.push({ succeeding, source: comments });
-    return succeeding;
-});
 // discard preprocessors
 header = header.replace(/\s*#(if|else|elif|end).*/gm, '');
 // replace vector<x>
@@ -132,7 +136,7 @@ const getMemberList = (() => {
 })();
 
 const structRE = /(struct\s+(?:\w+\(\w+\)\s+)?(\w+).*?){\s*.+?\s*};/gs;
-const structMemberRE = /^\s*(const\w*\s*)?([\w[\]]+)\s+?(\w+)(?:\s*[={]?\s*(.*?)\s*}*\s*)?;(?:\s*\/\/\s*@ts-(.*?)$)?/gm;
+const structMemberRE = /^\s*(const\w*\s*)?([\w[\:\]]+)\s+?(\w+)(?:\s*[={]?\s*(.*?)\s*}*\s*)?;(?:\s*\/\/\s*@ts-(.*?)$)?/gm;
 const structMap = {};
 const replaceConstants = (() => {
     const strMap = {
@@ -180,6 +184,7 @@ while (structCap) {
             type = type.replace(/(\b)(?:uint\w+?_t|int\w+?_t|float)(\b)/, '$1number$1');
             type = type.replace(/(\b)(?:bool)(\b)/, '$1boolean$2');
             type = type.replace(/(\b)(?:String)(\b)/, '$1string$2');
+            type = type.replace(/(\b)(?:ccstd::string)(\b)/, '$1string$2');
             if (memberCap[1]) { readonly = true; }
             const isArray = type.endsWith('[]');
             const decayedType = isArray ? type.slice(0, -2) : type;
@@ -236,6 +241,7 @@ let output = '';
 
 for (const name of Object.keys(enumMap)) {
     const e = enumMap[name];
+    if (e.comments) { output += e.comments + '\n'; }
     output += `export enum ${name} {\n`;
 
     if (options.nonVerbatimCopy) {

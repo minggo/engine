@@ -46,7 +46,8 @@ namespace cc {
 BasePlatform* BasePlatform::_currentPlatform = nullptr;
 
 BasePlatform::BasePlatform() {
-    CCASSERT(_currentPlatform == nullptr, "The platform has been initialized, only one platform can be initialized");
+    // Only one platform can be initialized.
+    CC_ASSERT(_currentPlatform == nullptr);
     _currentPlatform = this;
 }
 
@@ -80,7 +81,7 @@ BasePlatform* BasePlatform::getPlatform() {
         return _currentPlatform;
     }
     createDefaultPlatform();
-    CCASSERT(_currentPlatform != nullptr, "Need to point to the current platform");
+    CC_ASSERT(_currentPlatform != nullptr);
     return _currentPlatform;
 }
 

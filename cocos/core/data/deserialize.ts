@@ -23,8 +23,6 @@
  THE SOFTWARE.
 */
 
-
-
 import { EDITOR, TEST, PREVIEW, BUILD, DEBUG, JSB, DEV } from 'internal:constants';
 import { legacyCC } from '../global-exports';
 import { ValueType } from '../value-types';
@@ -536,20 +534,32 @@ interface ICustomClass {
  */
 export class Details {
     /**
-     * the obj list whose field needs to load asset by uuid
+     * @en
+     * the object list whose field needs to load asset by uuid
+     * @zh
+     * 对象列表，其中每个对象有属性需要通过 uuid 进行资源加载
      */
     uuidObjList: IFileData[File.DependObjs] | null = null;
     /**
+     * @en
      * the corresponding field name which referenced to the asset
+     * @zh
+     * 引用着资源的字段名称
      */
     uuidPropList: IFileData[File.DependKeys] | null = null;
     /**
+     * @en
      * list of the depends assets' uuid
+     * @zh
+     * 依赖资源的 uuid 列表
      */
     uuidList: IFileData[File.DependUuidIndices] | null = null;
 
     /**
+     * @en
      * list of the depends assets' type
+     * @zh
+     * 依赖的资源类型列表
      */
     uuidTypeList: string[] = [];
 
@@ -747,7 +757,17 @@ function parseCustomClass (data: IFileData, owner: any, key: string, value: ICus
 }
 
 function parseValueTypeCreated (data: IFileData, owner: any, key: string, value: IValueTypeData) {
-    BuiltinValueTypeSetters[value[VALUETYPE_SETTER]](owner[key], value);
+    /**BuiltinValueTypes index: Vec2=0, Vec3=1, Vec4=2, Quat=3, Color=4, Size=5, Rect=6, Mat4=7
+       The native layer type corresponding to the BuiltinValueTypes has not been exported exclude Color,
+       so we need to set to native after value changed
+     * */
+    if (JSB) {
+        const tmp = owner[key];
+        BuiltinValueTypeSetters[value[VALUETYPE_SETTER]](tmp, value);
+        owner[key] = tmp;
+    } else {
+        BuiltinValueTypeSetters[value[VALUETYPE_SETTER]](owner[key], value);
+    }
 }
 
 function parseValueType (data: IFileData, owner: any, key: string, value: IValueTypeData) {

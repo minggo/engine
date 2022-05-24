@@ -36,13 +36,14 @@ public:
     explicit Sampler(const SamplerInfo &info);
 
     static size_t computeHash(const SamplerInfo &info);
+    static SamplerInfo unpackFromHash(size_t hash);
 
     inline const SamplerInfo &getInfo() const { return _info; }
-    inline const size_t &     getHash() const { return _hash; }
+    inline const size_t &getHash() const { return _hash; }
 
 protected:
     SamplerInfo _info;
-    size_t      _hash{0U};
+    size_t _hash{0U};
 };
 
 } // namespace gfx

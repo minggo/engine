@@ -1,5 +1,5 @@
 /****************************************************************************
- Copyright (c) 2020-2022 Xiamen Yaji Software Co., Ltd.
+ Copyright (c) 2020-2021 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos.com
 
@@ -26,9 +26,9 @@
 #pragma once
 
 #include "base/Macros.h"
+#include "core/scene-graph/Node.h"
 #include "physics/physx/PhysXInc.h"
 #include "physics/spec/IJoint.h"
-#include "scene/Node.h"
 
 namespace cc {
 namespace physics {
@@ -40,24 +40,24 @@ class PhysXJoint : virtual public IBaseJoint {
 
 public:
     ~PhysXJoint() override = default;
-    inline uintptr_t            getImpl() override { return reinterpret_cast<uintptr_t>(this); }
-    void                        initialize(scene::Node *node) override;
-    void                        onEnable() override;
-    void                        onDisable() override;
-    void                        onDestroy() override;
-    void                        setConnectedBody(uintptr_t v) override;
-    void                        setEnableCollision(bool v) override;
-    virtual void                updateScale0() = 0;
-    virtual void                updateScale1() = 0;
+    inline uintptr_t getImpl() override { return reinterpret_cast<uintptr_t>(this); }
+    void initialize(Node *node) override;
+    void onEnable() override;
+    void onDisable() override;
+    void onDestroy() override;
+    void setConnectedBody(uintptr_t v) override;
+    void setEnableCollision(bool v) override;
+    virtual void updateScale0() = 0;
+    virtual void updateScale1() = 0;
     static physx::PxRigidActor &getTempRigidActor();
-    static void                 releaseTempRigidActor();
+    static void releaseTempRigidActor();
 
 protected:
-    physx::PxJoint * _mJoint{nullptr};
+    physx::PxJoint *_mJoint{nullptr};
     PhysXSharedBody *_mSharedBody{nullptr};
     PhysXSharedBody *_mConnectedBody{nullptr};
-    bool             _mEnableCollision{false};
-    virtual void     onComponentSet() = 0;
+    bool _mEnableCollision{false};
+    virtual void onComponentSet() = 0;
 
 private:
     static physx::PxRigidActor *tempRigidActor;

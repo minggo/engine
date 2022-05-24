@@ -24,13 +24,8 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module event
- */
-
 import { ccclass, type, serializable, editable, tooltip } from 'cc.decorator';
-import { Node } from '../scene-graph';
+import type { Node } from '../scene-graph';
 import { legacyCC } from '../global-exports';
 
 /**
@@ -100,8 +95,8 @@ export class EventHandler {
      * @zh
      * 事件响应组件和函数所在节点
      */
-    @serializable
-    @type(legacyCC.Node)
+    // @type(Node) should be removed for avoid circle reference error
+    // the type definition of it deal with in the file './component-event-handler.schema.ts'
     @serializable
     @tooltip('i18n:button.click_event.target')
     public target: Node | null = null;
@@ -198,5 +193,3 @@ export class EventHandler {
         }
     }
 }
-
-legacyCC.Component.EventHandler = EventHandler;

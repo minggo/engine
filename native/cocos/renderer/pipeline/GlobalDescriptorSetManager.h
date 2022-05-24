@@ -25,7 +25,10 @@
 
 #pragma once
 
-#include "base/CoreStd.h"
+#include <cstdint>
+#include "base/Ptr.h"
+#include "base/std/container/unordered_map.h"
+#include "base/std/container/vector.h"
 
 namespace cc {
 namespace gfx {
@@ -37,39 +40,36 @@ class Texture;
 class Device;
 } // namespace gfx
 namespace pipeline {
-class RenderPipeline;
 
-class GlobalDSManager : public Object {
+class GlobalDSManager final {
 public:
-    GlobalDSManager()           = default;
-    ~GlobalDSManager() override = default;
+    GlobalDSManager() = default;
+    ~GlobalDSManager() = default;
 
-    inline std::unordered_map<uint, gfx::DescriptorSet *> getDescriptorSetMap() const { return _descriptorSetMap; }
-    inline gfx::Sampler *                                 getLinearSampler() const { return _linearSampler; }
-    inline gfx::Sampler *                                 getPointSampler() const { return _pointSampler; }
-    inline gfx::DescriptorSetLayout *                     getDescriptorSetLayout() const { return _descriptorSetLayout; }
-    inline gfx::DescriptorSet *                           getGlobalDescriptorSet() const { return _globalDescriptorSet; }
+    inline ccstd::unordered_map<uint32_t, gfx::DescriptorSet *> getDescriptorSetMap() const { return _descriptorSetMap; }
+    inline gfx::Sampler *getLinearSampler() const { return _linearSampler; }
+    inline gfx::Sampler *getPointSampler() const { return _pointSampler; }
+    inline gfx::DescriptorSetLayout *getDescriptorSetLayout() const { return _descriptorSetLayout; }
+    inline gfx::DescriptorSet *getGlobalDescriptorSet() const { return _globalDescriptorSet; }
 
-    void                activate(gfx::Device *device, RenderPipeline *pipeline);
-    void                bindBuffer(uint binding, gfx::Buffer *buffer);
-    void                bindTexture(uint binding, gfx::Texture *texture);
-    void                bindSampler(uint binding, gfx::Sampler *sampler);
-    void                update();
-    gfx::DescriptorSet *getOrCreateDescriptorSet(uint idx);
-    void                destroy();
+    void activate(gfx::Device *device);
+    void bindBuffer(uint32_t binding, gfx::Buffer *buffer);
+    void bindTexture(uint32_t binding, gfx::Texture *texture);
+    void bindSampler(uint32_t binding, gfx::Sampler *sampler);
+    void update();
+    gfx::DescriptorSet *getOrCreateDescriptorSet(uint32_t idx);
+    void destroy();
 
-protected:
     static void setDescriptorSetLayout();
 
 private:
-    RenderPipeline *                               _pipeline            = nullptr;
-    gfx::Device *                                  _device              = nullptr;
-    gfx::Sampler *                                 _linearSampler       = nullptr;
-    gfx::Sampler *                                 _pointSampler        = nullptr;
-    gfx::DescriptorSetLayout *                     _descriptorSetLayout = nullptr;
-    gfx::DescriptorSet *                           _globalDescriptorSet = nullptr;
-    std::unordered_map<uint, gfx::DescriptorSet *> _descriptorSetMap{};
-    std::vector<gfx::Buffer *>                     _shadowUBOs;
+    gfx::Device *_device = nullptr;
+    gfx::Sampler *_linearSampler = nullptr;
+    gfx::Sampler *_pointSampler = nullptr;
+    IntrusivePtr<gfx::DescriptorSetLayout> _descriptorSetLayout;
+    gfx::DescriptorSet *_globalDescriptorSet = nullptr;
+    ccstd::unordered_map<uint32_t, gfx::DescriptorSet *> _descriptorSetMap{};
+    ccstd::vector<gfx::Buffer *> _shadowUBOs;
 };
 
 } // namespace pipeline

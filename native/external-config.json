@@ -1,9 +1,8 @@
 {
-    "version": "v3d-gfx-112",
     "from": {
         "type": "github",
-        "owner": "cocos",
-        "name": "cocos-engine-external",
-        "checkout": "v3d-gfx-112"
+        "owner": "cocos-creator",
+        "name": "engine-native-external",
+        "checkout": "v3d-gfx-117"
     }
 }

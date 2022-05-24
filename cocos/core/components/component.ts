@@ -24,11 +24,6 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module component
- */
-
 import { ccclass, tooltip, displayName, type, serializable, disallowAnimation } from 'cc.decorator';
 import { EDITOR, TEST } from 'internal:constants';
 import { Script } from '../assets/scripts';
@@ -42,6 +37,7 @@ import { Node } from '../scene-graph';
 import { legacyCC } from '../global-exports';
 import { errorID, warnID, assertID } from '../platform/debug';
 import { CompPrefabInfo } from '../utils/prefab/prefab-info';
+import { EventHandler } from './component-event-handler';
 
 const idGenerator = new IDGenerator('Comp');
 const IsOnLoadCalled = CCObject.Flags.IsOnLoadCalled;
@@ -61,6 +57,8 @@ const NullNode = null as unknown as Node;
  */
 @ccclass('cc.Component')
 class Component extends CCObject {
+    public static EventHandler = EventHandler;
+
     get name () {
         if (this._name) {
             return this._name;
@@ -163,6 +161,7 @@ class Component extends CCObject {
     }
 
     public static system = null;
+
     /**
      * @en The node this component is attached to. A component is always attached to a node.
      * @zh 该组件被附加到的节点。组件总会附加到一个节点。
@@ -182,13 +181,13 @@ class Component extends CCObject {
     public _enabled = true;
 
     /**
-     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * @internal
      */
     @serializable
     public __prefab: CompPrefabInfo | null = null;
 
     /**
-     * @deprecated since v3.5.0, this is an engine private interface that will be removed in the future.
+     * @internal
      */
     public _sceneGetter: null | (() => RenderScene) = null;
 
@@ -384,12 +383,6 @@ class Component extends CCObject {
     public _onPreDestroy () {
         // Schedules
         this.unscheduleAllCallbacks();
-
-        //
-        if (EDITOR && !TEST) {
-            // @ts-expect-error expected
-            _Scene.AssetsWatcher.stop(this);
-        }
 
         // onDestroy
         legacyCC.director._nodeActivator.destroyComp(this);

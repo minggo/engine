@@ -29,13 +29,13 @@
 
 #pragma once
 
-#include "base/Ref.h"
-#include "spine/SkeletonData.h"
-#include "spine/spine.h"
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
+#include "base/RefCounted.h"
+#include "spine/SkeletonData.h"
+#include "spine/spine.h"
 
 namespace spine {
 
@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    static SkeletonDataMgr* instance;
+    static SkeletonDataMgr *instance;
     destroyCallback _destroyCallback = nullptr;
     std::map<std::string, SkeletonDataInfo *> _dataMap;
 };

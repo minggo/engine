@@ -34,7 +34,7 @@ public:
     /**
      * @brief Start base platform initialization.
      */
-    int32_t run(int argc, const char** argv) override;
+    int32_t run(int argc, const char **argv) override;
 
     /**
      * @brief Get targe platform type.
@@ -57,15 +57,15 @@ public:
     /**
      * @brief Implement dispatch event interface.
      */
-    void dispatchEvent(const OSEvent& ev) override;
+    void dispatchEvent(const OSEvent &ev) override;
     /**
      * @brief Implement dispatch touch event interface.
      */
-    void dispatchTouchEvent(const TouchEvent& ev) override;
+    void dispatchTouchEvent(const TouchEvent &ev) override;
     /**
      * @brief Implement handle default event interface.
      */
-    void handleDefaultEvent(const OSEvent& ev) override;
+    void handleDefaultEvent(const OSEvent &ev) override;
     /**
      * @brief Get the SDK version for Android.Other systems also have sdk versions, 
             but they are not currently used.
@@ -80,7 +80,7 @@ public:
      * @brief most platforms are the main thread, android is the non-main thread
      * @param task : Tasks running in platform threads
      */
-    void runInPlatformThread(const ThreadCallback& task) override;
+    void runInPlatformThread(const ThreadCallback &task) override;
     /**
      * @brief Get task call frequency.
      */
@@ -113,9 +113,9 @@ private:
 
     int32_t _fps{60};
 
-    HandleEventCallback      _handleEventCallback{nullptr};
+    HandleEventCallback _handleEventCallback{nullptr};
     HandleTouchEventCallback _handleTouchEventCallback{nullptr};
-    HandleEventCallback      _handleDefaultEventCallback{nullptr};
+    HandleEventCallback _handleDefaultEventCallback{nullptr};
 };
 
 } // namespace cc

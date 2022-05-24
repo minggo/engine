@@ -23,8 +23,6 @@
  THE SOFTWARE.
  */
 
-
-
 import { RenderingSubMesh } from '../../core/assets/rendering-sub-mesh';
 import { DRAW_INFO_SIZE, Buffer, IndirectBuffer, Attribute, BufferInfo, DrawInfo,
     AttributeName, BufferUsageBit, Format, FormatInfos, MemoryUsageBit, PrimitiveMode } from '../../core/gfx';
@@ -33,6 +31,7 @@ import { scene } from '../../core/renderer';
 import CurveRange from '../animator/curve-range';
 import GradientRange from '../animator/gradient-range';
 import { Material } from '../../core/assets';
+import { JSB } from '../../core/default-constants';
 
 const _vertex_attrs = [
     new Attribute(AttributeName.ATTR_POSITION, Format.RGB32F), // xyz:position
@@ -60,6 +59,9 @@ export class LineModel extends scene.Model {
 
     constructor () {
         super();
+        if (JSB) {
+            (this as any)._registerListeners();
+        }
         this.type = scene.ModelType.LINE;
         this._capacity = 100;
         this._iaInfo = new IndirectBuffer([new DrawInfo()]);

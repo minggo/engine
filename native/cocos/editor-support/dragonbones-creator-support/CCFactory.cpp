@@ -57,7 +57,7 @@ Armature *CCFactory::_buildArmature(const BuildArmaturePackage &dataPackage) con
     const auto armatureDisplay = CCArmatureDisplay::create();
 
     // will release when armature destructor
-    armatureDisplay->retain();
+    armatureDisplay->addRef();
 
     armature->init(
         dataPackage.armature,

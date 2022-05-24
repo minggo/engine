@@ -23,11 +23,6 @@
  THE SOFTWARE.
  */
 
-/**
- * @packageDocumentation
- * @module gfx
- */
-
 import { Buffer } from './buffer';
 import { murmurhash2_32_gc } from '../../utils/murmurhash2_gc';
 import { Attribute, GFXObject, ObjectType, InputAssemblerInfo, DrawInfo } from './define';
@@ -154,7 +149,19 @@ export abstract class InputAssembler extends GFXObject {
         return this._drawInfo.firstInstance;
     }
 
-    get drawInfo (): Readonly<DrawInfo> {
+    /**
+     * @en set the draw range
+     * @zh 设置渲染范围
+     */
+    set drawInfo (info: DrawInfo) {
+        this._drawInfo = info;
+    }
+
+    /**
+     * @en get the draw range
+     * @zh 获取渲染范围
+     */
+    get drawInfo (): DrawInfo {
         return this._drawInfo;
     }
 

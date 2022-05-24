@@ -31,7 +31,7 @@
 cc::IOSPlatform *_platform = nullptr;
 - (void)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     _platform = dynamic_cast<cc::IOSPlatform *>(cc::BasePlatform::getPlatform());
-    CCASSERT(_platform != nullptr, "Platform pointer can't be null");
+    CC_ASSERT(_platform != nullptr);
     _platform->loop();
 }
 
@@ -59,10 +59,9 @@ cc::IOSPlatform *_platform = nullptr;
     _platform->dispatchEvent(ev);
 }
 
-
 - (float)getPixelRatio {
-    cc::BasePlatform* platform = cc::BasePlatform::getPlatform();
-    cc::IScreen* screenIntf = platform->getInterface<cc::IScreen>();
+    cc::BasePlatform *platform = cc::BasePlatform::getPlatform();
+    cc::IScreen *screenIntf = platform->getInterface<cc::IScreen>();
     return (float)screenIntf->getDevicePixelRatio();
 }
 
@@ -88,9 +87,9 @@ cc::IOSPlatform *_platform = nullptr;
             break;
     }
     cc::DeviceEvent ev;
-    cc::BasePlatform* platform = cc::BasePlatform::getPlatform();
-    cc::IScreen* screenIntf = platform->getInterface<cc::IScreen>();
-    ev.type           = cc::DeviceEvent::Type::DEVICE_ORIENTATION;
+    cc::BasePlatform *platform = cc::BasePlatform::getPlatform();
+    cc::IScreen *screenIntf = platform->getInterface<cc::IScreen>();
+    ev.type = cc::DeviceEvent::Type::DEVICE_ORIENTATION;
     ev.args[0].intVal = static_cast<int>(screenIntf->getDeviceOrientation());
     _platform->dispatchEvent(ev);
 
@@ -115,4 +114,3 @@ cc::IOSPlatform *_platform = nullptr;
 }
 
 @end
-

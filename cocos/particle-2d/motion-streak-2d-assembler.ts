@@ -24,11 +24,6 @@
  THE SOFTWARE.
  */
 
-/**
- * @packageDocumentation
- * @module particle2d
- */
-
 import { IAssembler, IAssemblerManager } from '../2d/renderer/base';
 import { MotionStreak } from './motion-streak-2d';
 import { Vec2, Color } from '../core/math';
@@ -228,8 +223,8 @@ export const MotionStreakAssembler: IAssembler = {
         // fill index data
         const bid = chunk.bufferId;
         const vid = chunk.vertexOffset;
-        const meshBuffer = chunk.vertexAccessor.getMeshBuffer(chunk.bufferId);
-        const ib = chunk.vertexAccessor.getIndexBuffer(bid);
+        const meshBuffer = chunk.meshBuffer;
+        const ib = chunk.meshBuffer.iData;
         let indexOffset = meshBuffer.indexOffset;
         for (let i = 0, l = indexCount; i < l; i += 2) {
             const start = vid + i;

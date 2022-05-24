@@ -23,17 +23,20 @@
  THE SOFTWARE.
  */
 
-import { JSB } from 'internal:constants';
 import { legacyCC } from '../../global-exports';
 import { Vec3 } from '../../math';
 import { Ambient } from './ambient';
 import { Light, LightType } from './light';
-import { NativeDirectionalLight } from '../native-scene';
 import { PCFType, Shadows } from './shadows';
 
 const _forward = new Vec3(0, 0, -1);
 const _v3 = new Vec3();
 
+/**
+ * @en The directional light representation in the render scene, it acts as the main light source in a scene.
+ * As main light, only one directional light can be created in a scene, it can generate realtime shadows with configuration.
+ * @zh 渲染场景中的方向光抽象，这是场景中的主光源。作为主光源，每个场景只能有一个方向光，它也包含阴影配置，用来生成实时阴影。
+ */
 export class DirectionalLight extends Light {
     protected _dir: Vec3 = new Vec3(1.0, -1.0, -1.0);
     protected _illuminanceHDR: number = Ambient.SUN_ILLUM;
@@ -56,18 +59,22 @@ export class DirectionalLight extends Light {
     protected _shadowFar = 10.0;
     protected _shadowOrthoSize = 5;
 
+    /**
+     * @en The direction vector of the light
+     * @zh 光源的方向
+     */
     set direction (dir: Vec3) {
         Vec3.normalize(this._dir, dir);
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setDirection(dir);
-        }
     }
 
     get direction (): Vec3 {
         return this._dir;
     }
 
-    // in Lux(lx)
+    /**
+     * @en The illuminance of the light in Lux(lx)
+     * @zh 光源的辐照度，单位是 Lux(lx)
+     */
     get illuminance (): number {
         const isHDR = (legacyCC.director.root).pipeline.pipelineSceneData.isHDR;
         if (isHDR) {
@@ -85,24 +92,26 @@ export class DirectionalLight extends Light {
         }
     }
 
+    /**
+     * @en The illuminance of the light in HDR mode
+     * @zh HDR 模式下光源的辐照度
+     */
     get illuminanceHDR () {
         return this._illuminanceHDR;
     }
     set illuminanceHDR (value: number) {
         this._illuminanceHDR = value;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setIlluminanceHDR(value);
-        }
     }
 
+    /**
+     * @en The illuminance of the light in LDR mode
+     * @zh LDR 模式下光源的辐照度
+     */
     get illuminanceLDR () {
         return this._illuminanceLDR;
     }
     set illuminanceLDR (value: number) {
         this._illuminanceLDR = value;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setIlluminanceLDR(value);
-        }
     }
 
     /**
@@ -114,51 +123,39 @@ export class DirectionalLight extends Light {
     }
     set shadowEnabled (val) {
         this._shadowEnabled = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowEnabled(val);
-        }
     }
 
     /**
-      * @en get or set shadow pcf.
-      * @zh 获取或者设置阴影pcf等级。
-      */
+     * @en get or set shadow pcf.
+     * @zh 获取或者设置阴影pcf等级。
+     */
     get shadowPcf () {
         return this._shadowPcf;
     }
     set shadowPcf (val) {
         this._shadowPcf = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowPcf(val);
-        }
     }
 
     /**
-      * @en get or set shadow map sampler offset
-      * @zh 获取或者设置阴影纹理偏移值
-      */
+     * @en get or set shadow map sampler offset
+     * @zh 获取或者设置阴影纹理偏移值
+     */
     get shadowBias () {
         return this._shadowBias;
     }
     set shadowBias (val) {
         this._shadowBias = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowBias(val);
-        }
     }
 
     /**
-      * @en get or set normal bias.
-      * @zh 设置或者获取法线偏移。
-      */
+     * @en get or set normal bias.
+     * @zh 设置或者获取法线偏移。
+     */
     get shadowNormalBias () {
         return this._shadowNormalBias;
     }
     set shadowNormalBias (val: number) {
         this._shadowNormalBias = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowNormalBias(val);
-        }
     }
 
     /**
@@ -170,93 +167,72 @@ export class DirectionalLight extends Light {
     }
     set shadowSaturation (val: number) {
         this._shadowSaturation = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowSaturation(this._shadowSaturation);
-        }
     }
 
     /**
-      * @en get or set shadow camera far
-      * @zh 获取或者设置潜在阴影产生的范围
-      */
+     * @en get or set shadow camera far
+     * @zh 获取或者设置潜在阴影产生的范围
+     */
     get shadowDistance () {
         return this._shadowDistance;
     }
     set shadowDistance (val) {
         this._shadowDistance = Math.min(val, Shadows.MAX_FAR);
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowDistance(val);
-        }
     }
 
     /**
-      * @en get or set shadow camera far
-      * @zh 获取或者设置潜在阴影产生的范围
+     * @en get or set shadow camera far
+     * @zh 获取或者设置潜在阴影产生的范围
      */
     get shadowInvisibleOcclusionRange () {
         return this._shadowInvisibleOcclusionRange;
     }
     set shadowInvisibleOcclusionRange (val) {
         this._shadowInvisibleOcclusionRange = Math.min(val, Shadows.MAX_FAR);
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowInvisibleOcclusionRange(val);
-        }
     }
 
     /**
-      * @en get or set fixed area shadow
-      * @zh 是否是固定区域阴影
-      */
+     * @en get or set fixed area shadow
+     * @zh 是否是固定区域阴影
+     */
     get shadowFixedArea () {
         return this._shadowFixedArea;
     }
     set shadowFixedArea (val) {
         this._shadowFixedArea = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowFixedArea(val);
-        }
     }
 
     /**
-      * @en get or set shadow camera near
-      * @zh 获取或者设置阴影相机近裁剪面
-      */
+     * @en The near clip plane of the shadow camera
+     * @zh 获取或者设置阴影相机近裁剪面
+     */
     get shadowNear () {
         return this._shadowNear;
     }
     set shadowNear (val) {
         this._shadowNear = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowNear(val);
-        }
     }
 
     /**
-      * @en get or set shadow camera far
-      * @zh 获取或者设置阴影相机远裁剪面
-      */
+     * @en The far clip plane of the shadow camera
+     * @zh 获取或者设置阴影相机远裁剪面
+     */
     get shadowFar () {
         return this._shadowFar;
     }
     set shadowFar (val) {
         this._shadowFar = Math.min(val, Shadows.MAX_FAR);
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowFar(val);
-        }
     }
 
     /**
-      * @en get or set shadow camera orthoSize
-      * @zh 获取或者设置阴影相机正交大小
-      */
+     * @en get or set shadow camera orthoSize
+     * @zh 获取或者设置阴影相机正交大小
+     */
     get shadowOrthoSize () {
         return this._shadowOrthoSize;
     }
     set shadowOrthoSize (val) {
         this._shadowOrthoSize = val;
-        if (JSB) {
-            (this._nativeObj as NativeDirectionalLight).setShadowOrthoSize(val);
-        }
     }
 
     constructor () {
@@ -271,6 +247,10 @@ export class DirectionalLight extends Light {
         this.direction = new Vec3(1.0, -1.0, -1.0);
     }
 
+    /**
+     * @en Update the direction
+     * @zh 更新方向
+     */
     public update () {
         if (this._node && this._node.hasChangedFlags) {
             this.direction = Vec3.transformQuat(_v3, _forward, this._node.worldRotation);

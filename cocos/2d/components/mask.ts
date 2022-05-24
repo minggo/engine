@@ -24,13 +24,8 @@
  THE SOFTWARE.
 */
 
-/**
- * @packageDocumentation
- * @module ui
- */
-
 import { ccclass, help, executionOrder, menu, tooltip, displayOrder, type, visible, override, serializable, range, slide } from 'cc.decorator';
-import { InstanceMaterialType, Renderable2D } from '../framework/renderable-2d';
+import { InstanceMaterialType, UIRenderer } from '../framework/ui-renderer';
 import { clamp, Color, Mat4, Vec2, Vec3 } from '../../core/math';
 import { warnID } from '../../core/platform';
 import { IBatcher } from '../renderer/i-batcher';
@@ -38,7 +33,7 @@ import { ccenum } from '../../core/value-types/enum';
 import { Graphics } from './graphics';
 import { TransformBit } from '../../core/scene-graph/node-enum';
 import { SpriteFrame } from '../assets/sprite-frame';
-import { Game, Material, builtinResMgr, director, RenderingSubMesh, CCObject } from '../../core';
+import { Game, Material, builtinResMgr, director, CCObject } from '../../core';
 import { Device, BufferInfo, BufferUsageBit, MemoryUsageBit, PrimitiveMode } from '../../core/gfx';
 import { legacyCC } from '../../core/global-exports';
 import { MaterialInstance, scene } from '../../core/renderer';
@@ -46,6 +41,7 @@ import { Model } from '../../core/renderer/scene';
 import { vfmt, getAttributeStride } from '../renderer/vertex-format';
 import { Stage } from '../renderer/stencil-manager';
 import { NodeEventProcessor } from '../../core/scene-graph/node-event-processor';
+import { RenderingSubMesh } from '../../core/assets/rendering-sub-mesh';
 
 const _worldMatrix = new Mat4();
 const _vec2_temp = new Vec2();
@@ -117,7 +113,7 @@ const SEGMENTS_MAX = 10000;
 @help('i18n:cc.Mask')
 @executionOrder(110)
 @menu('2D/Mask')
-export class Mask extends Renderable2D {
+export class Mask extends UIRenderer {
     /**
      * @en
      * The mask type.

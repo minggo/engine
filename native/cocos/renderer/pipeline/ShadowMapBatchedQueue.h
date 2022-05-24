@@ -26,12 +26,12 @@
 #pragma once
 
 #include "Define.h"
-#include "scene/Camera.h"
-#include "scene/Light.h"
-#include "scene/Model.h"
-#include "scene/SubModel.h"
-
+#include "cocos/base/Macros.h"
 namespace cc {
+namespace scene {
+class Camera;
+class Pass;
+} // namespace scene
 namespace pipeline {
 struct RenderObject;
 class RenderInstancedQueue;
@@ -40,10 +40,10 @@ class RenderPipeline;
 
 //const uint phaseID(PassPhase::getPhaseID("shadow-caster"));
 
-class CC_DLL ShadowMapBatchedQueue : public Object {
+class CC_DLL ShadowMapBatchedQueue final {
 public:
     explicit ShadowMapBatchedQueue(RenderPipeline *);
-    ~ShadowMapBatchedQueue() override = default;
+    ~ShadowMapBatchedQueue();
     void destroy();
 
     void clear();
@@ -54,14 +54,14 @@ public:
 private:
     int getShadowPassIndex(const scene::Model *model) const;
 
-    RenderPipeline *                _pipeline = nullptr;
-    vector<const scene::SubModel *> _subModels;
-    vector<const scene::Pass *>     _passes;
-    vector<gfx::Shader *>           _shaders;
-    RenderInstancedQueue *          _instancedQueue = nullptr;
-    RenderBatchedQueue *            _batchedQueue   = nullptr;
-    gfx::Buffer *                   _buffer         = nullptr;
-    uint                            _phaseID        = 0;
+    RenderPipeline *_pipeline = nullptr;
+    ccstd::vector<const scene::SubModel *> _subModels;
+    ccstd::vector<const scene::Pass *> _passes;
+    ccstd::vector<gfx::Shader *> _shaders;
+    RenderInstancedQueue *_instancedQueue = nullptr;
+    RenderBatchedQueue *_batchedQueue = nullptr;
+    gfx::Buffer *_buffer = nullptr;
+    uint _phaseID = 0;
 };
 
 } // namespace pipeline

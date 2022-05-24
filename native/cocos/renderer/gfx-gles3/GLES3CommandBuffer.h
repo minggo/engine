@@ -26,16 +26,17 @@
 #pragma once
 
 #include "GLES3Std.h"
+#include "base/std/container/queue.h"
 #include "gfx-base/GFXCommandBuffer.h"
 
 namespace cc {
 namespace gfx {
 
 class GLES3GPUCommandAllocator;
-class GLES3CmdPackage;
-class GLES3GPUPipelineState;
-class GLES3GPUInputAssembler;
-class GLES3GPUDescriptorSet;
+struct GLES3CmdPackage;
+struct GLES3GPUPipelineState;
+struct GLES3GPUInputAssembler;
+struct GLES3GPUDescriptorSet;
 
 class CC_GLES3_API GLES3CommandBuffer : public CommandBuffer {
 public:
@@ -80,16 +81,16 @@ protected:
 
     virtual void bindStates();
 
-    GLES3GPUCommandAllocator *_cmdAllocator  = nullptr;
-    GLES3CmdPackage *         _curCmdPackage = nullptr;
-    queue<GLES3CmdPackage *>  _pendingPackages, _freePackages;
+    GLES3GPUCommandAllocator *_cmdAllocator = nullptr;
+    GLES3CmdPackage *_curCmdPackage = nullptr;
+    ccstd::queue<GLES3CmdPackage *> _pendingPackages, _freePackages;
 
-    uint32_t                        _curSubpassIdx       = 0U;
-    GLES3GPUPipelineState *         _curGPUPipelineState = nullptr;
-    GLES3GPUInputAssembler *        _curGPUInputAssember = nullptr;
-    vector<GLES3GPUDescriptorSet *> _curGPUDescriptorSets;
-    vector<vector<uint32_t>>        _curDynamicOffsets;
-    DynamicStates                   _curDynamicStates;
+    uint32_t _curSubpassIdx = 0U;
+    GLES3GPUPipelineState *_curGPUPipelineState = nullptr;
+    GLES3GPUInputAssembler *_curGPUInputAssember = nullptr;
+    ccstd::vector<GLES3GPUDescriptorSet *> _curGPUDescriptorSets;
+    ccstd::vector<ccstd::vector<uint32_t>> _curDynamicOffsets;
+    DynamicStates _curDynamicStates;
 
     bool _isStateInvalid = false;
 };

@@ -275,14 +275,6 @@ const cacheManager = require('./jsb-cache-manager');
         }
     };
 
-    const _updateBatch = skeleton._updateBatch;
-    skeleton._updateBatch = function () {
-        _updateBatch.call(this);
-        if (this._nativeSkeleton) {
-            this._nativeSkeleton.setBatchEnabled(this.enableBatch);
-        }
-    };
-
     skeleton.setSkeletonData = function (skeletonData) {
         if (skeletonData.width != null && skeletonData.height != null) {
             const uiTrans = this.node._uiProps.uiTransformComp;
@@ -411,8 +403,7 @@ const cacheManager = require('./jsb-cache-manager');
 
         if (force || node.hasChangedFlags || node._dirtyFlags) {
             // sync node world matrix to native
-            node.updateWorldTransform();
-            const worldMat = node._mat;
+            const worldMat = node.getWorldMatrix();
             paramsBuffer[1]  = worldMat.m00;
             paramsBuffer[2]  = worldMat.m01;
             paramsBuffer[3]  = worldMat.m02;
