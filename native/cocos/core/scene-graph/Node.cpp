@@ -927,7 +927,6 @@ void Node::destruct() {
     _children.clear();
     _scene = nullptr;
     _userData = nullptr;
-    _userData = nullptr;
 }
 
 //
