@@ -93,7 +93,7 @@ jobs:
             clang-tidy --format-style=file --export-fixes=clang-fixes.yaml $FILTERED
           fi
       - name: clang-tidy-action
-        uses: PatriceJiang/clang-tidy-action@master
+        uses: minggo/clang-tidy-action@master
         if: hashFiles('clang-fixes.yaml') != ''
         with:
           fixesFile: clang-fixes.yaml

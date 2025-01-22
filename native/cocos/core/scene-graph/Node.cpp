@@ -620,27 +620,27 @@ void Node::setWorldScale(float x, float y, float z) {
         Mat3 localRotInv;
         Mat4 worldMatrixTmp = _worldMatrix;
         Vec3 rescaleFactor;
-        
+
         if (oldWorldScale.x == 0) {
             oldWorldScale.x = 1;
             worldMatrixTmp.m[0] = 1.F;
             rotationFlag = TransformBit::ROTATION;
         }
-        
+
         if (oldWorldScale.y == 0) {
             oldWorldScale.y = 1;
             worldMatrixTmp.m[5] = 1.F;
             rotationFlag = TransformBit::ROTATION;
         }
-        
+
         if (oldWorldScale.z == 0) {
             oldWorldScale.z = 1;
             worldMatrixTmp.m[10] = 1.F;
             rotationFlag = TransformBit::ROTATION;
         }
-        
+
         rescaleFactor = _worldScale / oldWorldScale;
-        
+
         // apply new world scale to temp world matrix
         worldMatrixTmp.scale(rescaleFactor); // need opt
         // get temp local matrix
@@ -655,7 +655,7 @@ void Node::setWorldScale(float x, float y, float z) {
         _localScale.x = Vec3{localRS.m[0], localRS.m[1], localRS.m[2]}.length();
         _localScale.y = Vec3{localRS.m[3], localRS.m[4], localRS.m[5]}.length();
         _localScale.z = Vec3{localRS.m[6], localRS.m[7], localRS.m[8]}.length();
-        
+
         if (_localScale.x == 0 || _localScale.y == 0 || _localScale.z == 0) {
             rotationFlag = TransformBit::ROTATION;
         }
@@ -926,6 +926,7 @@ void Node::destruct() {
     CCObject::destruct();
     _children.clear();
     _scene = nullptr;
+    _userData = nullptr;
     _userData = nullptr;
 }
 
