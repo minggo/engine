@@ -679,7 +679,7 @@ private:
     uint32_t _hasChangedFlagsVersion{0};
     uint32_t _hasChangedFlags{0};
 
-    bool _eulerDirty{false};
+    bool _eulerDirty{true};
 
     friend class NodeActivator;
     friend class Scene;
