@@ -92,8 +92,6 @@ jobs:
           else
             clang-tidy --format-style=file --export-fixes=clang-fixes.yaml $FILTERED
           fi
-      - name: Enable Debug Logs
-        run: echo "::set-output name=ACTIONS_STEP_DEBUG::true"
       - name: clang-tidy-action
         uses: minggo/clang-tidy-action@master
         if: hashFiles('clang-fixes.yaml') != ''
@@ -102,3 +100,5 @@ jobs:
           noFailOnIssue: false
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           error-limit: 200
+        env: 
+          ACTIONS_STEP_DEBUG: true
