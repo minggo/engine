@@ -92,8 +92,6 @@ jobs:
           else
             clang-tidy --format-style=file --export-fixes=clang-fixes.yaml $FILTERED
           fi
-      - name: Clear GitHub Action cache
-        run: rm -rf /home/runner/work/_actions/minggo/clang-tidy-action
       - name: clang-tidy-action
         uses: minggo/clang-tidy-action@master
         if: hashFiles('clang-fixes.yaml') != ''
